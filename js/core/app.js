@@ -247,7 +247,7 @@
     $('modelLabel').hidden = !f.modelLabel; f.marker.visible = false; setPrompt(null);
     var cam = f.def.cam || f.meta.cam, p = v3(cam.pos);
     tweenTo(p, poseQuat(p, v3(cam.target)), Math.min(1.3, 0.6 + camera.position.distanceTo(p) * 0.02), panelW() / 2);
-    if (id === 'rainbarrel') setHint(false);
+    if (id === 'rainbarrel') setHint(false); else $('chipHint').hidden = true; // 첫 안내는 탐험용 — 시설 장면 위에 남기지 않는다
     safe(f, f.def.enter, f.ctx);
   }
   function leaveActive() {
@@ -258,7 +258,7 @@
   function toExplore(stand, lookAt) {
     leaveActive(); closeModal();
     $('panel').hidden = true; document.body.classList.remove('fac-mode');
-    mode = 'explore';
+    mode = 'explore'; $('chipHint').hidden = !hintOn; // 빗물통을 아직 안 했으면 다시 보인다
     if (stand) setPlayer(stand, lookAt);
     tweenTo(eyePos(), eyeQuat(), 0.7, 0);
   }

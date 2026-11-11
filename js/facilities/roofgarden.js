@@ -9,6 +9,7 @@
   var RAMP = ['#2d1b69', '#8f2a7a', '#dd4a3c', '#f8961e', '#ffe45c'].map(function (h) { return new T.Color(h); }); // 덜 뜨거움 → 뜨거움
   var HEAT_BARE = 0.93, HEAT_GARDEN = 0.24, HEAT_PLANT = 0.06; // 램프 위치(색을 고르는 값, 온도가 아님)
   var BG = new T.Color('#1c1730'), HEATC = '#ffa726';
+  var LINK_MSG = '같은 햇볕인데 맨옥상은 뜨겁고 식물 쪽은 덜 뜨거워요. 옥상 정원은 단열에 도움이 되어 건물이 덜 더워지고 냉방 에너지를 아껴요.'; // 지도서 373쪽 연결 문장
   var DOT_N = 2, DOT_FAST = 0.9, DOT_SLOW = 0.3, DOT_TOP = 5.5, DOT_BOT = 4.2; // 칸마다 알갱이 수, 속도(m/s), 내려가는 구간 y
   var C = {
     concrete: new T.Color('#cfc9bb'), concreteHi: new T.Color('#ece4cf'), concreteSide: new T.Color('#a8a194'),
@@ -194,7 +195,7 @@
       s.tgl.el.classList.remove('primary');
       var planted = s.bare.some(function (c) { return c.planted; });
       if (on) {
-        ctx.ui.setInfo(planted ? '같은 햇볕인데 맨옥상은 뜨겁고 식물 쪽은 덜 뜨거워요. 옥상 정원은 단열에 도움이 되어 건물이 덜 더워지고 냉방 에너지를 아껴요.'
+        ctx.ui.setInfo(planted ? LINK_MSG
           : '같은 햇볕을 받아도 맨옥상은 뜨겁고, 정원은 덜 뜨거워요. 맨옥상에 식물을 심으면 어떻게 될까요?');
         if (!planted) s.btnPlant.classList.add('primary');
         if (planted) s.opQueued = 0.7; // 색이 바뀐 뒤 기록
@@ -301,7 +302,7 @@
         var c = s.bare[i];
         if (c.planted && c.growT < 1) {
           c.growT = Math.min(1, c.growT + dt / 1.6); c.grow = ease(c.growT); growing = true;
-          if (c.growT >= 1 && s.thermal) s.opQueued = 0.3;
+          if (c.growT >= 1 && s.thermal) { s.opQueued = 0.3; ctx.ui.setInfo(LINK_MSG); } // 열화상 먼저 → 심기 경로에서도 연결 문장을 기록과 함께
         }
       }
       if (growing) { s.dirty = true; this.writeVeg(); }
