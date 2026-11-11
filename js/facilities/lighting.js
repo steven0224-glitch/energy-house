@@ -190,9 +190,9 @@
       s.btnSwap = ui.button('LED등으로 바꾸기', function () { self.swap(ctx); }, { parent: rowA, primary: true });
       var card = ui.el('div', null, null, boxA);
       card.style.cssText = 'border:2px solid #2b2b2b;border-radius:12px;background:#fff;padding:8px 10px;display:grid;' +
-        'grid-template-columns:max-content 52px 1fr max-content;gap:6px 8px;align-items:center;font-size:15px;font-weight:700;word-break:keep-all';
+        'grid-template-columns:max-content 52px 1fr max-content;gap:6px 8px;align-items:center;font-size:16px;font-weight:700;word-break:keep-all';
       function cell(parent, text, css) { var e = ui.el('span', null, text, parent); if (css) e.style.cssText = css; return e; }
-      var HDR = 'font-size:14px;font-weight:800;color:#5c5a55';
+      var HDR = 'font-size:16px;font-weight:800;color:#5c5a55';
       cell(card, ''); cell(card, '밝기', HDR); cell(card, '전기 사용량', HDR + ';grid-column:span 2');
       s.rowName = {}; s.elFill = {}; s.elVal = {}; s.ltFill = {};
       ['old', 'led'].forEach(function (k) {
@@ -204,7 +204,7 @@
         s.elVal[k] = cell(card, '아직', 'min-width:2.2em;text-align:right');
       });
       var chips = cell(card, null, 'grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:2px');
-      var CHIP = 'display:inline-flex;align-items:center;gap:5px;padding:2px 10px;border:2px solid #2b2b2b;border-radius:999px;font-size:15px;font-weight:700;background:#fff';
+      var CHIP = 'display:inline-flex;align-items:center;gap:5px;padding:2px 10px;border:2px solid #2b2b2b;border-radius:999px;font-size:16px;font-weight:700;background:#fff';
       cell(chips, '같은 밝기', CHIP);
       s.chipTime = cell(chips, null, CHIP);
       var clk = cell(s.chipTime, null, 'position:relative;display:inline-block;width:20px;height:20px;border:2px solid #2b2b2b;border-radius:50%;background:#fff;flex:none');

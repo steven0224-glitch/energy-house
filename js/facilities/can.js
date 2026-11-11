@@ -17,8 +17,8 @@
   var BALE_TOP = TRAY + 0.32, ORE_AFTER = 0.55;
   var INK = '#2b2b2b', ALU = '#d5dbe1', GREEN = '#1f9e45';
   var FONT = 'bold 21px "Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif';
-  var CAPS = ['수거한 캔', '녹여 만든 알루미늄 재료', '새 금속 제품'];
-  var DOT = 'width:30px;height:30px;border-radius:50%;border:3px solid #2b2b2b;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none;';
+  var CAPS = ['수거한 캔', '녹여 만든 알루미늄\u00a0재료', '새 금속 제품'];
+  var DOT = 'width:30px;height:30px;border-radius:50%;border:3px solid #2b2b2b;font-size:17px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none;';
   var INFO0 = '빈 캔을 끌어서 알맞은 분리배출 칸에 넣어 보세요.';
 
   function mid(b) { return (b.x0 + b.x1) / 2; }
@@ -73,16 +73,17 @@
   function atlas() {
     var c = document.createElement('canvas'); c.width = c.height = 256;
     var g = c.getContext('2d'), RH = 32, rows = [];
-    var items = BINS.map(function (b) { return { text: b.name, bg: b.bg, fg: '#fff', icon: b.icon }; })
+    // 칸 이름표는 그림 없이 글자만(칸 색이 이미 종류를 보여 준다): 칸 폭 안에서 글자를 가장 크게
+    var items = BINS.map(function (b) { return { text: b.name, bg: b.bg, fg: '#fff', bin: true }; })
       .concat([{ text: '① 수거한 캔' }, { text: '② 알루미늄 재료' }, { text: '③ 새 금속 제품' }, { text: '새로 캐낼 광석', bg: '#5b4a3c', fg: '#fff' }]);
     g.font = FONT; g.textBaseline = 'middle';
     items.forEach(function (it, i) {
-      var y = i * RH, iw = it.icon ? 22 : 0, w = Math.min(256, Math.ceil(g.measureText(it.text).width) + iw + 24);
+      var y = i * RH, iw = it.icon ? 22 : 0, pad = it.bin ? 14 : 24, w = Math.min(256, Math.ceil(g.measureText(it.text).width) + iw + pad);
       rr(g, 1.5, y + 1.5, w - 3, RH - 3, 9); g.fillStyle = it.bg || '#fffdf5'; g.fill();
       g.lineWidth = 3; g.strokeStyle = INK; g.stroke();
       if (it.icon) icon(g, it.icon, 10, y + 5, it.fg, it.bg);
-      g.fillStyle = it.fg || INK; g.fillText(it.text, 12 + iw, y + RH / 2 + 1);
-      rows.push({ plate: uvr(0, y, w, RH), fill: uvr(w - 9, y + 14, 2, 2) }); // fill = 글자 오른쪽 바탕색 한 점(칸 테 색)
+      g.fillStyle = it.fg || INK; g.fillText(it.text, pad / 2 + iw, y + RH / 2 + 1);
+      rows.push({ plate: uvr(0, y, w, RH), fill: uvr(4, y + 14, 2, 2) }); // fill = 글자 왼쪽 바탕색 한 점(칸 테 색)
     });
     var y = 7 * RH; // 화로 불빛(0~64px)
     rr(g, 1.5, y + 1.5, 61, RH - 3, 6); g.fillStyle = '#ff7a2e'; g.fill(); g.lineWidth = 3; g.strokeStyle = INK; g.stroke();
@@ -156,7 +157,7 @@
 
       // 이름표·칸 색 테·화로 불빛·화살표(MeshBasic + alphaTest, 드로콜 1)
       var L = [], ph = 1, i;
-      BINS.forEach(function (b, k) { ph = Math.min(ph, (b.x1 - b.x0 - 0.06) / A.rows[k].plate.aspect); });
+      BINS.forEach(function (b, k) { ph = Math.min(ph, (b.x1 - b.x0 - 0.02) / A.rows[k].plate.aspect); });
       BINS.forEach(function (b, k) {
         var m = mid(b), f = A.rows[k].fill, w = b.x1 - b.x0;
         L.push({ r: A.rows[k].plate, c: [m, 0.42, BZ1 + 0.006], h: ph });
@@ -164,7 +165,7 @@
           { r: f, c: [b.x0 + 0.025, BH + 0.003, BZC], w: 0.05, h: 0.55, up: true }, { r: f, c: [b.x1 - 0.025, BH + 0.003, BZC], w: 0.05, h: 0.55, up: true });
       });
       for (i = 0; i < 3; i++) L.push({ r: A.rows[3 + i].plate, c: [SX[i], 1.51, -10.885], h: 0.14 });
-      L.push({ r: A.rows[6].plate, c: [0.675, 0.37, -9.444], h: 0.11 });
+      L.push({ r: A.rows[6].plate, c: [0.675, 0.37, -9.444], h: 0.14 });
       L.push({ r: A.glow, c: [0.59, 1.12, -10.594], h: 0.11 });
       L.push({ r: A.arrow, c: [0.3, TRAY + 0.004, SZ - 0.04], h: 0.1, up: true }, { r: A.arrow, c: [1.21, TRAY + 0.004, SZ - 0.04], h: 0.1, up: true });
       root.add(new T.Mesh(plates(L), new T.MeshBasicMaterial({ map: A.tex, alphaTest: 0.5 })));
@@ -226,7 +227,7 @@
         if (i) ui.el('div', null, null, drow).style.cssText = 'flex:1;height:3px;background:#d8cfb8';
         var d = ui.el('div', null, String(i + 1), drow); d.style.cssText = DOT + 'background:#fff'; s.dots.push(d);
       }
-      var cap = ui.el('div', 'plegend', null, strip); cap.style.cssText = 'display:flex;gap:6px;font-size:14px;line-height:1.2;word-break:keep-all;font-weight:700';
+      var cap = ui.el('div', 'plegend', null, strip); cap.style.cssText = 'display:flex;gap:6px;font-size:16px;line-height:1.2;word-break:keep-all;font-weight:700';
       CAPS.forEach(function (t, k) { ui.el('span', null, t, cap).style.cssText = 'flex:1;text-align:' + ['left', 'center', 'right'][k]; });
       s.bar = ui.bar('새로 캐낼 광석', { max: 1, color: '#a0643c', format: function (v) { return v > 0.99 ? '많음' : '줄었어요'; } });
       s.bar.set(1);

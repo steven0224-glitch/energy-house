@@ -14,12 +14,12 @@
   var RAW = new T.Color('#6b4426'), GLOW_A = new T.Color('#ffb000'), GLOW_B = new T.Color('#ffe866'),
     NEWWOOD = new T.Color('#e0b877'), LEGC = new T.Color('#5b3a1e');
   var TXT = {
-    start: '의자 다리 이음새가 헐거워서 흔들려요. 반짝이는 곳을 눌러 고쳐 보세요.',
-    hammer: '망치로 이음새를 단단히 박고 있어요.',
+    start: '의자 다리가 이어진 곳이 느슨해서 흔들려요. 반짝이는 곳을 눌러 고쳐 보세요.',
+    hammer: '망치로 다리가 이어진 곳을 단단히 박고 있어요.',
     one: '한 곳이 단단해졌어요. 반짝이는 곳이 한 곳 더 있어요.',
     done: '흔들림이 멈췄어요. 새 의자를 만들지 않아도 되니 나무판이 그대로 남았어요.',
-    notYet: '아직 흔들려서 앉기 어려워요. 반짝이는 이음새부터 고쳐요.',
-    tapChair: '반짝이는 이음새를 눌러야 고칠 수 있어요.',
+    notYet: '아직 흔들려서 앉기 어려워요. 반짝이는 곳부터 고쳐요.',
+    tapChair: '반짝이는 곳을 눌러야 고칠 수 있어요.',
     seated: '고친 의자에 다시 앉았어요. 고쳐 쓰면 새 의자에 들 나무를 아껴요.'
   };
 
@@ -41,7 +41,7 @@
     _w.set(0, -LEN / 2, 0).applyQuaternion(_q);
     setInst(im, i, x + _w.x, top + _w.y, z + _w.z, LEG, LEN, LEG, _q);
   }
-  var DOT = 'width:30px;height:30px;flex:none;border-radius:50%;border:3px solid #2b2b2b;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;';
+  var DOT = 'width:30px;height:30px;flex:none;border-radius:50%;border:3px solid #2b2b2b;font-size:17px;font-weight:800;display:flex;align-items:center;justify-content:center;';
   function setDot(d, st, n) { d.style.background = ['#fff', '#ffd34d', '#6fd08c'][st]; d.textContent = st === 2 ? '✓' : n; }
 
   EXP.registerFacility({
@@ -102,9 +102,9 @@
       [-0.27, -0.1, 0.07, 0.24].forEach(function (z) { pb.push({ min: [-0.36, 0.29, z - 0.035], max: [0.36, 0.36, z + 0.035], mat: W }); });
       pile.add(B.mesh(pb));
       var tagNew = V.textSprite('새 의자용 나무', { height: 0.3, bg: '#fffdf5' });
-      var tagSaved = V.textSprite('✓ 아꼈어요', { height: 0.36, color: '#135f2a', bg: '#dff7e5' });
-      // 벽(x=-3)에 글자 판이 묻히지 않게 방 안쪽으로 비켜 둔다
-      tagNew.position.set(-0.35, 0.78, 0.1); tagSaved.position.set(-0.35, 0.8, 0.1); tagSaved.visible = false;
+      var tagSaved = V.textSprite('✓ 아꼈어요', { height: 0.3, color: '#135f2a', bg: '#dff7e5' });
+      // 벽(x=-3)에 글자 판이 묻히지 않게 방 안쪽으로 비켜 두고, 더미 윗면(0.36) 바로 위에 붙여 허공에 떠 보이지 않게 한다
+      tagNew.position.set(-0.35, 0.58, 0.1); tagSaved.position.set(-0.35, 0.6, 0.1); tagSaved.visible = false;
       tagSaved.userData.base = tagSaved.scale.clone();
       pile.add(tagNew, tagSaved);
 
@@ -121,7 +121,7 @@
       steps.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:10px';
       function step(n, label) {
         var d = ui.el('div', null, String(n), steps); d.style.cssText = DOT;
-        ui.el('span', null, label, steps).style.cssText = 'font-size:15px;font-weight:700;white-space:nowrap';
+        ui.el('span', null, label, steps).style.cssText = 'font-size:16px;font-weight:700;white-space:nowrap';
         return d;
       }
       s.dot1 = step(1, '고치기');
@@ -130,7 +130,7 @@
       var row = ui.row();
       s.btnFix = ui.button('고치기', function () { self.fixAll(ctx); }, { parent: row, primary: true });
       s.btnSit = ui.button('앉아 보기', function () { self.sit(ctx); }, { parent: row });
-      s.hint = ui.el('div', 'plegend', '반짝이는 이음새를 직접 눌러도 고칠 수 있어요.');
+      s.hint = ui.el('div', 'plegend', '반짝이는 곳을 직접 눌러도 고칠 수 있어요.');
       ui.button('처음 상태로', function () { self.reset(ctx); }, { small: true });
 
       ctx.onTap(hits[0], function () { self.fix(ctx, 0); });

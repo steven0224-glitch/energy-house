@@ -68,20 +68,24 @@
     return ctl;
   }
 
-  /* 카메라를 향하는 글자 판. opts: {height(m, 0.4), color, bg, depthTest(true)} → THREE.Sprite */
+  /* 카메라를 향하는 글자 판. opts: {height(m, 0.4, 최소 0.3), color, bg, depthTest(true)} → THREE.Sprite */
   function textSprite(text, opts) {
     opts = opts || {};
     var c = document.createElement('canvas'), g = c.getContext('2d'), fs = 48;
     var font = 'bold ' + fs + 'px "Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif';
     g.font = font;
-    var w = Math.ceil(g.measureText(text).width) + 28, h = fs + 22;
+    var w = Math.ceil(g.measureText(text).width) + 40, h = fs + 28;
     c.width = w; c.height = h; g.font = font;
-    g.fillStyle = opts.bg || 'rgba(255,255,255,0.92)'; g.fillRect(0, 0, w, h);
-    g.strokeStyle = 'rgba(40,40,40,0.9)'; g.lineWidth = 4; g.strokeRect(2, 2, w - 4, h - 4);
-    g.fillStyle = opts.color || '#222'; g.textBaseline = 'middle'; g.fillText(text, 14, h / 2 + 2);
+    // 지침 §1-4: 종이색 바탕 + 먹색 6px 테두리 + 둥근 모서리 12px (roundRect 미지원 브라우저 대비 arcTo)
+    var x0 = 3, y0 = 3, x1 = w - 3, y1 = h - 3, r = 12;
+    g.beginPath(); g.moveTo(x0 + r, y0);
+    g.arcTo(x1, y0, x1, y1, r); g.arcTo(x1, y1, x0, y1, r); g.arcTo(x0, y1, x0, y0, r); g.arcTo(x0, y0, x1, y0, r); g.closePath();
+    g.fillStyle = opts.bg || '#fffdf5'; g.fill();
+    g.strokeStyle = '#2b2b2b'; g.lineWidth = 6; g.stroke();
+    g.fillStyle = opts.color || '#2b2b2b'; g.textBaseline = 'middle'; g.fillText(text, 20, h / 2 + 2);
     var t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace;
     var s = new T.Sprite(new T.SpriteMaterial({ map: t, depthTest: opts.depthTest !== false, fog: false }));
-    var H = opts.height || 0.4; s.scale.set(H * w / h, H, 1);
+    var H = Math.max(0.3, opts.height || 0.4); s.scale.set(H * w / h, H, 1); // 지침 최소 높이 0.3m — 시설마다 크기가 벌어지지 않게
     return s;
   }
 

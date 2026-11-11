@@ -27,7 +27,7 @@
     set: function (k, v) { try { sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* 저장 실패해도 앱은 계속 */ } }
   };
 
-  var renderer, scene, camera, world;
+  var renderer, scene, camera, world, worldLabels;
   var colliders = [];
   var player = { pos: new T.Vector3(), yaw: 0, pitch: 0, vy: 0, eyeY: EYE };
   var mode = 'start', active = null, tw = null, viewOff = 0, nearId = null, modalOpen = false, hintOn = false;
@@ -164,7 +164,9 @@
     function add(n, parent) { (parent || f.ctrls).appendChild(n); return n; }
     function button(label, fn, o) {
       o = o || {};
-      var b = el('button', 'pbtn' + (o.primary ? ' primary' : '') + (o.small ? ' small' : '')); b.type = 'button'; b.textContent = label;
+      // ‘처음 상태로’는 패널 머리 오른쪽에 고정(css .p-reset) — 본문이 길어도 늘 보이게. DOM 은 시설 본문 안에 둔다
+      var head = !!o.head;  // 자동 고정은 일부 시설에서 패널 밖으로 밀려 꺼 둠(05:10)
+      var b = el('button', 'pbtn' + (o.primary ? ' primary' : '') + (o.small ? ' small' : '') + (head ? ' p-reset' : '')); b.type = 'button'; b.textContent = label;
       if (fn) b.addEventListener('click', function () { safe(f, fn, b); });
       return add(b, o.parent);
     }
@@ -244,7 +246,7 @@
     $('panel').hidden = false; f.body.hidden = false;
     $('pName').textContent = f.meta.name; $('pPlace').textContent = f.meta.place;
     $('pPlace').className = 'p-place ' + f.meta.category;
-    $('modelLabel').hidden = !f.modelLabel; f.marker.visible = false; setPrompt(null);
+    $('modelLabel').hidden = !f.modelLabel; showWorldMarks(false); setPrompt(null); // 다른 시설 표식·방 이름표가 시설 장면에 끼지 않게
     var cam = f.def.cam || f.meta.cam, p = v3(cam.pos);
     tweenTo(p, poseQuat(p, v3(cam.target)), Math.min(1.3, 0.6 + camera.position.distanceTo(p) * 0.02), panelW() / 2);
     if (id === 'rainbarrel') setHint(false); else $('chipHint').hidden = true; // 첫 안내는 탐험용 — 시설 장면 위에 남기지 않는다
@@ -252,8 +254,9 @@
   }
   function leaveActive() {
     var f = active; if (!f) return;
+    flushCaptures(f.id); // 썸네일 예약이 남았으면 나가기 전에 지금 장면으로 찍는다
     safe(f, f.def.exit, f.ctx);
-    f.body.hidden = true; f.marker.visible = true; active = null; $('modelLabel').hidden = true; resetPointers();
+    f.body.hidden = true; showWorldMarks(true); active = null; $('modelLabel').hidden = true; resetPointers();
   }
   function toExplore(stand, lookAt) {
     leaveActive(); closeModal();
@@ -281,12 +284,31 @@
     var keep = [];
     caps.forEach(function (c) {
       if (now < c.at) { keep.push(c); return; }
-      if (!active || active.id !== c.id) return;           // 이미 나갔으면 이전 썸네일 유지
+      if (!active || active.id !== c.id) { captureAway(c.id); return; } // 이미 나갔으면 시설 카메라 자세로 따로 그려 찍는다
       if (tw) { c.at = now + 200; keep.push(c); return; }   // 카메라 이동이 끝난 뒤 찍는다
       capture(c.id);
     });
     caps = keep;
   }
+  function flushCaptures(id) {
+    var had = false;
+    caps = caps.filter(function (c) { if (c.id === id) { had = true; return false; } return true; });
+    if (had) { renderer.render(scene, camera); capture(id); } // 같은 틱에서 그려야 WebGL 버퍼가 남아 있다
+  }
+  /* 시설 밖에서 끝난 조작(막대가 바뀐 직후 나간 경우 등): 시설 카메라 자세로 한 번 그려 찍고, 같은 틱에 원래 화면을 다시 그린다(깜빡임 없음) */
+  function captureAway(id) {
+    var f = facs[id]; if (!f) return;
+    var cam = f.def.cam || f.meta.cam, p0 = camera.position.clone(), q0 = camera.quaternion.clone(), o0 = viewOff, p = v3(cam.pos);
+    var lab = worldLabels && worldLabels.visible, mk = [];
+    for (var k in facs) { mk.push([facs[k].marker, facs[k].marker.visible]); facs[k].marker.visible = false; }
+    if (worldLabels) worldLabels.visible = false;
+    camera.position.copy(p); camera.quaternion.copy(poseQuat(p, v3(cam.target))); setOff(panelW() / 2);
+    renderer.render(scene, camera); capture(id);
+    camera.position.copy(p0); camera.quaternion.copy(q0); setOff(o0);
+    mk.forEach(function (m) { m[0].visible = m[1]; }); if (worldLabels) worldLabels.visible = lab;
+    renderer.render(scene, camera);
+  }
+  function showWorldMarks(on) { for (var k in facs) facs[k].marker.visible = on; if (worldLabels) worldLabels.visible = on; }
   function capture(id) {
     try {
       var cv = renderer.domElement, pr = renderer.getPixelRatio();
@@ -359,7 +381,7 @@
   function placeJoy(p) {
     var j = $('joy'), k = $('joyKnob');
     if (!p) { j.style.left = ''; j.style.top = ''; j.classList.remove('live'); k.style.transform = ''; return; }
-    j.style.left = (p.x0 - 70) + 'px'; j.style.top = (p.y0 - 70) + 'px'; j.classList.add('live');
+    j.style.left = Math.max(8, p.x0 - 70) + 'px'; j.style.top = (p.y0 - 70) + 'px'; j.classList.add('live');
     k.style.transform = 'translate(' + (joy.vx * JR) + 'px,' + (joy.vy * JR) + 'px)';
   }
   function facHit(x, y) {
@@ -451,7 +473,8 @@
       return r === m ? b : { min: b.min, max: b.max, mat: r, uv: b.uv };
     });
     world = EXP.blocks.mesh(boxes); world.name = 'world'; scene.add(world);
-    W.labels.forEach(function (l) { var s = EXP.viz.textSprite(l.text, { height: 0.46, bg: '#fffdf5', color: '#2b2b2b' }); s.position.set(l.pos[0], l.pos[1], l.pos[2]); world.add(s); });
+    worldLabels = new T.Group(); worldLabels.name = 'worldLabels'; worldLabels.visible = false; world.add(worldLabels); // 시작 화면에서는 숨김
+    W.labels.forEach(function (l) { var s = EXP.viz.textSprite(l.text, { height: 0.46, bg: '#fffdf5', color: '#2b2b2b' }); s.position.set(l.pos[0], l.pos[1], l.pos[2]); worldLabels.add(s); });
     colliders = W.colliders.slice();
 
     markerGeo.resource = rimGeo(new T.BoxGeometry(0.4, 0.4, 0.4).rotateZ(Math.PI / 4).rotateX(Math.atan(Math.SQRT1_2)), '#1f9e45');
@@ -471,7 +494,7 @@
     addEventListener('keyup', function (e) { keys[e.code] = false; });
     addEventListener('blur', function () { keys = {}; });
     $('startBtn').addEventListener('click', function () {
-      $('start').hidden = true; document.body.classList.add('started'); mode = 'explore'; setHint(true);
+      $('start').hidden = true; document.body.classList.add('started'); mode = 'explore'; worldLabels.visible = true; setHint(true);
     });
     $('promptBtn').addEventListener('click', function () { if (nearId && mode === 'explore') enterFacility(nearId); });
     $('pBack').addEventListener('click', function () { toExplore(); });
@@ -495,7 +518,7 @@
         var f = facs[id];
         if (f.def.update) { try { f.def.update(dt, f.ctx); } catch (e) { if (!f.updErr) { f.updErr = true; console.error('[시설 ' + id + '] update 오류', e); } } }
       }
-      if (hintOn) facs.rainbarrel.marker.scale.setScalar(1.6 + Math.sin(t * 6) * 0.3);
+      if (hintOn) facs.rainbarrel.marker.scale.setScalar(1.25 + Math.sin(t * 6) * 0.15);
       EXP.viz._update(dt);
       if (mode === 'explore' && !tw && !modalOpen) updatePrompt();
       renderer.render(scene, camera);

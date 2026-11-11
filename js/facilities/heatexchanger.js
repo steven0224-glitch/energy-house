@@ -13,7 +13,8 @@
   // ---------- 색(아트 디렉션 §2·§3) ----------
   // outMid·inMid: 코어 가운데 색. 빨강↔파랑을 곧장 섞으면 보라(열화상 램프 색)가 되어, 흐름 쪽 기운이 남은 옅은 색을 거친다
   // (살구는 초록 성분을, 하늘은 파랑을 덜어 둬야 뒤 반쪽 섞임도 연보라를 지나지 않는다 — _check 가 램프 전체를 본다)
-  var HEX = { warm: '#ff5a3c', cold: '#3c8dff', warmOut: '#8fb8ff', coldIn: '#ff9d85', outMid: '#f8dcae', inMid: '#b4e0ea',
+  // 중간색은 중간 밝기(카키·청록): 크림·연하늘처럼 밝으면 어두운 코어 통로에서 빈 흰 사각형으로 보이고 열 화살표를 가린다
+  var HEX = { warm: '#ff5a3c', cold: '#3c8dff', warmOut: '#8fb8ff', coldIn: '#ff9d85', outMid: '#b39a78', inMid: '#5fa3a0',
     heat: '#ffa726', dim: '#c8ccd0', off: '#8a96a3' };
   var COL = {};
   Object.keys(HEX).forEach(function (k) { COL[k] = new T.Color(HEX[k]); });
@@ -185,7 +186,7 @@
 
   EXP.registerFacility({
     id: 'heatexchanger',
-    cam: { pos: [5.25, 1.65, -6.75], target: [5.05, 2.1, -10.8] },
+    cam: { pos: [5.25, 2.1, -6.75], target: [5.05, 2.1, -10.8] },   // 수평으로 봐서 덕트 세로선이 기울지 않게
 
     build: function (ctx) {
       var self = this, root = ctx.root, ui = ctx.ui;
@@ -324,9 +325,9 @@
       }
       s.tags = [
         tag('실내 공기 나감', '#b8321c', 3.62, 1.95, -10.1, 'out'),
-        tag('밖으로', '#b8321c', 6.72, 3.78, -10.45, 'out'),
+        tag('밖으로', '#2b2b2b', 6.72, 3.78, -10.45, 'out'),
         tag('바깥 공기 들어옴', '#1a5fa8', 5.45, 3.36, -10.4, 'in'),   // 창틀을 가리지 않게 덕트 입구 높이로
-        tag('실내로', '#1a5fa8', 3.85, 0.62, -9.75, 'in')
+        tag('실내로', '#2b2b2b', 3.85, 0.62, -9.75, 'in')
       ];
 
       // --- 바깥(북쪽 벽 바깥 면 z=-12): 통풍구 두 개와 창 ---
@@ -345,11 +346,11 @@
       // --- 패널 ---
       ui.setInfo(TXT.s0);
       var season = s.season = ui.el('div', null, '겨울 · 바깥에는 눈이 와요');
-      season.style.cssText = 'align-self:flex-start;display:inline-block;padding:2px 10px;border:2px solid #2b2b2b;border-radius:999px;font-size:15px;font-weight:700;background:#dcecff';
+      season.style.cssText = 'align-self:flex-start;display:inline-block;padding:2px 10px;border:2px solid #2b2b2b;border-radius:999px;font-size:16px;font-weight:700;background:#dcecff';
       var row = ui.row();
       s.btnStep = [1, 2, 3].map(function (k) {
         var b = ui.button('', function () { self.go(ctx, k); }, { parent: row });
-        b.style.cssText = 'font-size:clamp(14px,1.35vw,17px);padding:4px 4px;line-height:1.25;white-space:nowrap';   // 1000×600에서도 한 줄
+        b.style.cssText = 'font-size:clamp(16px,1.6vw,18px);padding:4px 4px;line-height:1.25;white-space:nowrap';   // 1000×600에서도 한 줄
         return b;
       });
       var row2 = ui.row();
@@ -453,11 +454,13 @@
       s.tgBypass.set(s.bypass); s.tgBypass.el.hidden = s.stage < 3;
       s.legend.hidden = s.stage < 2; s.legendHeat.hidden = s.stage < 3 || s.bypass;
       var lc = s.stage === 3 && !s.bypass;   // 열의 길: 연한 색이 '덜 따뜻함·덜 차가움'임을 범례에서 짚는다
-      [['warm', 'warmOut', '굵은 빨강 — 따뜻한 공기', '굵은 빨강→연한 파랑 — 덜 따뜻해진 공기'],
-        ['cold', 'coldIn', '굵은 파랑 — 찬 공기', '굵은 파랑→연한 빨강 — 덜 차가워진 공기']].forEach(function (x, i) {
+      // 열의 길에서는 두 공기 행을 ‘연한 색’ 한 행으로 합쳐 범례를 2행으로 둔다
+      [['warm', 'warmOut', '굵은 빨강 — 따뜻한 공기', '연한 색 — 덜 따뜻해진·덜 차가워진 공기'],
+        ['cold', 'coldIn', '굵은 파랑 — 찬 공기', '']].forEach(function (x, i) {
         var r = s.legendRows[i];
-        r.firstChild.style.background = lc ? 'linear-gradient(90deg,' + HEX[x[0]] + ' 50%,' + HEX[x[1]] + ' 50%)' : HEX[x[0]];
+        r.firstChild.style.background = lc ? 'linear-gradient(90deg,' + HEX.warmOut + ' 50%,' + HEX.coldIn + ' 50%)' : HEX[x[0]];
         r.lastChild.textContent = lc ? x[3] : x[2];
+        if (i === 1) r.hidden = lc;
       });
       var t;
       if (s.stage < 2) t = s.stage === 0 ? TXT.s0 : TXT.s1;

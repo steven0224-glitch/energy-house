@@ -31,10 +31,10 @@
   }
 
   var PAINT = {
-    grass: function (g) { noise(g, '#6aa84a', 0.07); specks(g, '#5c9a40', 9); specks(g, '#7cb85a', 5); },
+    grass: function (g) { noise(g, '#78a862', 0.07); specks(g, '#6a9a54', 9); specks(g, '#88b56e', 5); },
     grassSide: function (g) {
       noise(g, '#8a5a35', 0.13); specks(g, '#6b4426', 14);
-      for (var x = 0; x < 16; x++) { var h = 3 + (rnd() < 0.45 ? 1 : 0) + (rnd() < 0.2 ? 1 : 0); noise(g, '#6aa84a', 0.07, x, 0, 1, h); }
+      for (var x = 0; x < 16; x++) { var h = 3 + (rnd() < 0.45 ? 1 : 0) + (rnd() < 0.2 ? 1 : 0); noise(g, '#78a862', 0.07, x, 0, 1, h); }
     },
     dirt: function (g) { noise(g, '#8a5a35', 0.15); specks(g, '#6b4426', 22); specks(g, '#a06d44', 10); },
     soil: function (g) { noise(g, '#5a3b22', 0.15); specks(g, '#3f2817', 20); },

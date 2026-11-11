@@ -56,7 +56,9 @@
       // --- 손잡이(끄는 것): 노란 블록, 맥박으로 ‘누를 것’ 표시 ---
       var gripMat = new T.MeshBasicMaterial({ color: '#ffc21f', map: B.tex('tint') });   // 조명 무시: 그늘진 벽 앞에서도 ‘누를 것’이 밝게
       var grip = new T.Group(); root.add(grip);
-      grip.add(B.mesh([{ min: [-0.28, -0.28, -0.2], max: [0.28, 0.28, 0.2], mat: gripMat, uv: 4 }]));
+      grip.add(B.mesh([{ min: [-0.18, -0.18, -0.14], max: [0.18, 0.18, 0.14], mat: gripMat, uv: 4 }]));
+      // 누르는 영역은 0.56m 그대로(보이지 않는 판): 보이는 손잡이만 줄여 창·차양보다 먼저 눈에 띄지 않게
+      grip.add(new T.Mesh(new T.BoxGeometry(0.56, 0.56, 0.4), new T.MeshBasicMaterial({ visible: false })));
       grip.name = 'shade:grip';
       s.grip = grip;
 
@@ -97,18 +99,16 @@
       var head = ui.el('div', null, null);
       head.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:6px';
       var tag = ui.el('span', null, '여름 · 해가 높이 떠요', head);
-      tag.style.cssText = 'display:inline-block;padding:2px 10px;border:2px solid #2b2b2b;border-radius:999px;font-size:15px;font-weight:700;background:#fff3b0';
+      tag.style.cssText = 'display:inline-block;padding:2px 10px;border:2px solid #2b2b2b;border-radius:999px;font-size:16px;font-weight:700;background:#fff3b0';
       head.setAttribute('data-shade-state', '');
       s.dbg = head;
       var row = ui.row();
       s.btnDown = ui.button('차양 내리기', function () { self.go(ctx, 1); }, { parent: row, primary: true });
       s.btnUp = ui.button('차양 올리기', function () { self.go(ctx, 0); }, { parent: row });
-      ui.el('div', 'plegend', '창 옆 노란 손잡이를 아래로 끌어도 돼요.');
       s.barHeat = ui.bar('방이 더워지는 정도', { max: 1, color: '#ffa726', format: lvl });
       s.barCool = ui.bar('에어컨 냉방 필요', { max: 1, color: '#3c8dff', format: lvl });
       ui.button('처음 상태로', function () { self.go(ctx, 0, true); }, { small: true });   // 범례보다 위: 작은 화면에서 스크롤 없이 보이게
-      ui.legend([{ color: '#ffe08a', text: '노란 판 — 바닥에 닿은 햇빛' }, { color: '#6f5a48', text: '진한 판 — 차양이 만든 그늘' },
-        { color: '#ff5a3c', text: '굵은 빨강 — 더워진 공기' }, { color: '#3c8dff', text: '굵은 파랑 — 에어컨 찬 바람' }], '색이 뜻하는 것');
+      ui.legend([{ color: '#ff5a3c', text: '굵은 빨강 — 더워진 공기' }, { color: '#3c8dff', text: '굵은 파랑 — 에어컨 찬 바람' }]);
 
       // --- 3D 입력: 손잡이 끌기(세로), 손잡이 톡 = 반대로 ---
       ctx.draggable(grip, {
@@ -156,9 +156,9 @@
     say: function (ctx) {
       var s = this.s, t;
       if (s.f >= 0.8) t = '햇빛을 가리면 방이 덜 더워져 냉방에 드는 에너지를 아낄 수 있어요.';
-      else if (s.f > 0.15) t = '차양을 내릴수록 바닥의 햇빛 자국이 그늘로 바뀌어요. 끝까지 내려 볼까요?';
+      else if (s.f > 0.15) t = '차양을 내릴수록 바닥의 햇빛이 그늘로 바뀌어요. 끝까지 내려 볼까요?';
       else if (s.done) t = '차양을 올리니 햇빛이 다시 들어와요. 방이 더워지고 에어컨이 더 애써야 해요.';
-      else t = '높이 뜬 여름 해가 창으로 들어와 바닥이 뜨거워져요. 창 위 차양을 내려 볼까요?';
+      else t = '여름 햇빛이 창으로 들어와 바닥이 뜨거워져요. 노란 손잡이를 끌어 차양을 내려 볼까요?';
       if (t !== s.lastInfo) { s.lastInfo = t; ctx.ui.setInfo(t); }
       var down = s.f >= 0.8, up = s.f <= 0.02;
       s.btnDown.classList.toggle('primary', !s.done && !down);
@@ -210,13 +210,14 @@
       }
       s.rays.instanceMatrix.needsUpdate = true;
       // 공기: 더운 공기 수 ∝ 들어오는 햇빛, 찬 바람 수 ∝ 냉방 필요. 0으로 떨어뜨리지 않음
-      var counts = [Math.round(2 + 8 * s.q), Math.round(2 + 8 * s.q)], speeds = [0.5 + 0.2 * s.q, 0.5 + 0.2 * s.q];
+      // 가장 적을 때도 3개가 0.6m 간격으로 한 줄을 이뤄 ‘흐름’으로 읽히게 한다
+      var counts = [Math.round(3 + 7 * s.q), Math.round(3 + 7 * s.q)], speeds = [0.5 + 0.2 * s.q, 0.5 + 0.2 * s.q];
       for (k = 0; k < 2; k++) {
         var P = s.paths[k];
         for (i = 0; i < AIR_MAX; i++) {
           var idx = k * AIR_MAX + i;
           if (i >= counts[k]) { m4.makeScale(0.0001, 0.0001, 0.0001); s.air.setMatrixAt(idx, m4); continue; }
-          var d = ((i / counts[k]) * P.len + s.t * speeds[k]) % P.len;
+          var d = (i * Math.min(P.len / counts[k], 0.6) + s.t * speeds[k]) % P.len;
           for (var j = 1; j < P.p.length; j++) if (d <= P.cum[j] || j === P.p.length - 1) {
             v2.lerpVectors(P.p[j - 1], P.p[j], Math.min(1, (d - P.cum[j - 1]) / (P.cum[j] - P.cum[j - 1]))); break;
           }

@@ -91,7 +91,7 @@
       { min: [-1.7, -0.35, -1.0], max: [1.7, 0.25, 1.0] }, { min: [-1.2, 0.25, -0.7], max: [0.2, 0.8, 0.6] },
       { min: [0.1, 0.25, -0.6], max: [1.2, 0.6, 0.7] }, { min: [-0.5, 0.8, -0.4], max: [0.5, 1.05, 0.4] },
       { min: [-2.1, -0.25, -0.6], max: [-1.7, 0.1, 0.6] }, { min: [1.7, -0.2, -0.5], max: [2.0, 0.15, 0.5] },
-      { min: [-0.2, -0.43, -0.2], max: [0.2, -0.35, 0.2], color: '#2b2b2b' } // 밑면 손잡이 점
+      { min: [-0.14, -0.55, -0.14], max: [0.14, -0.35, 0.14], color: '#2b2b2b' } // 밑면 손잡이 점(높이를 줘 꼭지로 읽히게)
     ].map(function (b) {
       return { min: [b.min[0] * sc, b.min[1] * sc, b.min[2] * sc], max: [b.max[0] * sc, b.max[1] * sc, b.max[2] * sc], color: b.color || c };
     });
@@ -195,24 +195,24 @@
         });
         return g;
       });
-      s.hints = s.clouds.map(function (g) { var h = V.textSprite('끌어 보세요', { height: 0.42 }); h.position.set(0, -0.95, 1.0); h.visible = false; g.add(h); return h; });
+      s.hints = s.clouds.map(function (g) { var h = V.textSprite('끌어 보세요', { height: 0.52 }); h.position.set(0, -0.95, 1.0); h.visible = false; g.add(h); return h; });
 
       // ---- 전선: 패널 → 옥상 → 지붕 끝 단면 → 집 안 전등 ----
       var P = [[2.31, 5.9, -1.09], [2.31, WY, -1.09], [2.31, WY, -1.6], [-0.85, WY, -1.6], [-0.85, WY, -1.24], [-0.85, 4.0, -1.24], [-0.85, 3.47, -1.24]];
       var wb = [];
-      // 지붕 장면 예외: 전선 0.1·점 0.2/0.18(art-direction 0.06·0.10) — 먼 지붕 카메라에서도 태블릿 화면에 보이도록 키움
-      for (i = 0; i < 5; i++) wb.push(seg(P[i], P[i + 1], 0.1, '#2b2b2b'));
+      // 지붕 장면 예외: 전선 0.07·점 0.16/0.15(art-direction 0.06·0.10) — 먼 지붕 카메라에서도 보이되 탐험 화면에서 굵은 막대로 보이지 않게
+      for (i = 0; i < 5; i++) wb.push(seg(P[i], P[i + 1], 0.07, '#2b2b2b'));
       // 발전소에서 오는 전선: 마당 전봇대 → 앞벽 단면 → 전등 줄에서 만난다. 패널 전기가 줄면 이 길의 흐린 점이 늘어난다(전등이 꺼지지 않는 까닭)
-      var G = [[-3.4, 4.5, 1.6], [-1.25, 4.5, 1.6], [-1.25, 4.5, -1.24], [-0.85, 4.5, -1.24], [-0.85, 3.47, -1.24]];
-      for (i = 0; i < 3; i++) wb.push(seg(G[i], G[i + 1], 0.1, '#2b2b2b'));
-      wb.push({ min: [-3.5, 0, 1.5], max: [-3.3, 4.75, 1.7], color: '#8a7f72' }, { min: [-3.9, 4.55, 1.55], max: [-2.9, 4.65, 1.65], color: '#8a7f72' }); // 전봇대
+      var G = [[-2.3, 4.5, 1.6], [-1.25, 4.5, 1.6], [-1.25, 4.5, -1.24], [-0.85, 4.5, -1.24], [-0.85, 3.47, -1.24]];
+      for (i = 0; i < 3; i++) wb.push(seg(G[i], G[i + 1], 0.07, '#2b2b2b'));
+      wb.push({ min: [-2.4, 0, 1.5], max: [-2.2, 4.75, 1.7], color: '#8a7f72' }, { min: [-2.8, 4.55, 1.55], max: [-1.8, 4.65, 1.65], color: '#8a7f72' }); // 전봇대(지열 연결 장치 x −3.9~−2.7 과 겹치지 않게 그 동쪽)
       s.gpath = makePath(G);
       root.add(vcMesh(sb.concat(wb), false, 12)); // 패널 틀·다리 + 전선 한 메시. 단면 안쪽 전선도 보이도록 잘라 낸 면(11) 뒤에 그린다
       s.path = makePath(P);
-      var pulses = new T.InstancedMesh(new T.BoxGeometry(0.2, 0.2, 0.2), new T.MeshBasicMaterial({ color: '#ffd400' }), NPULSE);
+      var pulses = new T.InstancedMesh(new T.BoxGeometry(0.16, 0.16, 0.16), new T.MeshBasicMaterial({ color: '#ffd400' }), NPULSE);
       pulses.frustumCulled = false; pulses.renderOrder = 12; pulses.visible = false; pulses.count = 0; root.add(pulses); s.pulses = pulses;
       s.pd = new Float32Array(NPULSE); s.pn = 0; s.acc = 0;
-      var gpulses = new T.InstancedMesh(new T.BoxGeometry(0.18, 0.18, 0.18), new T.MeshBasicMaterial({ color: GRID }), NPULSE);
+      var gpulses = new T.InstancedMesh(new T.BoxGeometry(0.15, 0.15, 0.15), new T.MeshBasicMaterial({ color: GRID }), NPULSE);
       gpulses.frustumCulled = false; gpulses.renderOrder = 12; gpulses.visible = false; gpulses.count = 0; root.add(gpulses); s.gpulses = gpulses;
       s.gd = new Float32Array(NPULSE); s.gn = 0; s.gacc = 0;
 
@@ -256,7 +256,7 @@
         { min: [-1.65, 0.035, -2.1], max: [0.0, 0.045, -0.4], color: '#fff3b0' }                  // 바닥에 비친 불빛
       ], true, 12));
       var tagLamp = V.textSprite('전등', { height: 0.55 }); tagLamp.position.set(-0.85, 2.4, -0.9); cut.add(tagLamp);
-      var tagGrid = V.textSprite('발전소 전기', { height: 0.5 }); tagGrid.position.set(-3.4, 5.25, 1.6); cut.add(tagGrid); // 전봇대 위: 흐린 점이 어디서 오는지(글자 판 4개째)
+      var tagGrid = V.textSprite('발전소 전기', { height: 0.5 }); tagGrid.position.set(-2.3, 5.25, 1.6); cut.add(tagGrid); // 전봇대 위: 흐린 점이 어디서 오는지(글자 판 4개째)
 
       ctx.addCollider([1.95, 5, -2.45], [7.45, 7.1, -0.75]);
       ctx.showModelLabel(true);

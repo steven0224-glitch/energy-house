@@ -9,7 +9,7 @@
   var RAMP = ['#2d1b69', '#8f2a7a', '#dd4a3c', '#f8961e', '#ffe45c'].map(function (h) { return new T.Color(h); }); // 덜 뜨거움 → 뜨거움
   var HEAT_BARE = 0.93, HEAT_GARDEN = 0.24, HEAT_PLANT = 0.06; // 램프 위치(색을 고르는 값, 온도가 아님)
   var BG = new T.Color('#1c1730'), HEATC = '#ffa726';
-  var LINK_MSG = '같은 햇볕인데 맨옥상은 뜨겁고 식물 쪽은 덜 뜨거워요. 옥상 정원은 단열에 도움이 되어 건물이 덜 더워지고 냉방 에너지를 아껴요.'; // 지도서 373쪽 연결 문장
+  var LINK_MSG = '같은 햇볕인데 식물이 있는 쪽이 덜 뜨거워요. 옥상 정원이 단열을 도와 건물이 덜 더워지고, 냉방 에너지를 아껴요.'; // 지도서 373쪽 연결 문장
   var DOT_N = 2, DOT_FAST = 0.9, DOT_SLOW = 0.3, DOT_TOP = 5.5, DOT_BOT = 4.2; // 칸마다 알갱이 수, 속도(m/s), 내려가는 구간 y
   var C = {
     concrete: new T.Color('#cfc9bb'), concreteHi: new T.Color('#ece4cf'), concreteSide: new T.Color('#a8a194'),
@@ -134,14 +134,14 @@
       s.cover.visible = false; s.cover.frustumCulled = false; root.add(s.cover);
 
       // ── 열 알갱이: 칸마다 한 줄(DOT_N개). 옥상 바닥 아래로 들어가는 모습이 보이게 깊이 검사 없이 맨 나중에 그린다
-      s.dots = new T.InstancedMesh(new T.BoxGeometry(0.11, 0.11, 0.11), new T.MeshBasicMaterial({ color: HEATC, depthTest: false }), s.cells.length * DOT_N);
+      s.dots = new T.InstancedMesh(new T.BoxGeometry(0.13, 0.13, 0.13), new T.MeshBasicMaterial({ color: HEATC, depthTest: false }), s.cells.length * DOT_N);
       s.dots.instanceMatrix.setUsage(T.DynamicDrawUsage); s.dots.frustumCulled = false; s.dots.visible = false; s.dots.renderOrder = 5;
       s.cells.forEach(function (cell, k) { cell.sparse = (Math.floor(k / 6) + k % 6) % 4 === 0; cell.dotT = (k * 0.29) % 1; }); // 정원·심은 칸은 이 칸들만 한 줄 남김
       root.add(s.dots);
 
       // ── 이름표(3개)
       s.tagGarden = V.textSprite('정원', { height: 0.38, color: '#2e6b1f' }); s.tagGarden.position.set(-5.5, 5.35, -5.45);
-      s.tagBare = V.textSprite('맨옥상', { height: 0.38, color: '#5b5346' }); s.tagBare.position.set(TAG_BARE[0], TAG_BARE[1], TAG_BARE[2]);
+      s.tagBare = V.textSprite('빈 옥상', { height: 0.38, color: '#5b5346' }); s.tagBare.position.set(TAG_BARE[0], TAG_BARE[1], TAG_BARE[2]);
       s.tagSun = V.textSprite('같은 햇볕', { height: 0.34, color: '#9a6a00' }); s.tagSun.position.set(-4.0, 7.0, -2.2);
       s.tagHeat = V.textSprite('건물 안으로 들어가는 열', { height: 0.3, color: '#b45309' }); s.tagHeat.position.set(TAG_HEAT[0], TAG_HEAT[1], TAG_HEAT[2]);
       [s.tagGarden, s.tagBare, s.tagSun, s.tagHeat].forEach(function (t) { t.visible = false; root.add(t); });
@@ -149,9 +149,9 @@
       ctx.addCollider([-6.57, 5, -1.77], [-6.23, 6.4, -1.43]); // 나무 줄기
 
       // ── 패널
-      ui.setInfo('회색 맨옥상 칸을 눌러 식물을 심어 보세요. 그다음 ‘열화상 보기’를 눌러요.');
+      ui.setInfo('회색 빈 칸을 눌러 식물을 심어 보세요. 그다음 ‘온도 색으로 보기’를 눌러요.');
       s.btnPlant = ui.button('식물 심기', function () { self.plantNext(ctx); }, { primary: true });
-      s.tgl = ui.toggle('열화상 보기', false, function (on) { self.setThermal(ctx, on); });
+      s.tgl = ui.toggle('온도 색으로 보기', false, function (on) { self.setThermal(ctx, on); });
       s.legend = ui.legend([{ color: '#ffe45c', text: '뜨거움' }, { color: '#dd4a3c', text: '중간' }, { color: '#2d1b69', text: '덜 뜨거움' }], '색이 뜻하는 것');
       s.legend.hidden = true;
       ui.button('처음 상태로', function () { self.reset(ctx); }, { small: true });
@@ -159,7 +159,7 @@
       // 3D: 맨옥상 칸을 직접 누르면 그 칸에 심는다
       ctx.onTap(s.ground, function (hit) {
         var p = hit.point, cell = s.bare.filter(function (c) { return Math.abs(p.x - c.x) <= 0.5 && Math.abs(p.z - c.z) <= 0.5; })[0];
-        if (cell && !cell.planted) self.plant(ctx, cell); else if (!cell) ctx.toast('회색 맨옥상 칸을 눌러 보세요');
+        if (cell && !cell.planted) self.plant(ctx, cell); else if (!cell) ctx.toast('회색 빈 칸을 눌러 보세요');
       });
       this.writeVeg();
       this.sync(ctx);
@@ -170,7 +170,7 @@
 
     plantNext: function (ctx) {
       var c = this.s.bare.filter(function (x) { return !x.planted; });
-      if (!c.length) { ctx.toast('맨옥상 칸에 모두 심었어요'); return; }
+      if (!c.length) { ctx.toast('빈 칸에 모두 심었어요'); return; }
       // 정원 쪽(서쪽)에 붙은 칸부터 차례로
       c.sort(function (a, b) { return (a.x - b.x) || (a.z - b.z); });
       this.plant(ctx, c[0]);
@@ -184,7 +184,7 @@
       if (n === s.bare.length) s.btnPlant.disabled = true;
       this.sync(ctx);
       ctx.ui.setInfo(s.thermal ? '새싹이 자라면서 그 칸의 색이 어떻게 바뀌는지 보세요.'
-        : '새싹이 돋아 풀과 꽃으로 자라요. 이제 ‘열화상 보기’를 눌러 비교해 봐요.');
+        : '새싹이 돋아 풀과 꽃으로 자라요. 이제 ‘온도 색으로 보기’를 눌러 비교해 봐요.');
     },
 
     setThermal: function (ctx, on) {
@@ -196,11 +196,11 @@
       var planted = s.bare.some(function (c) { return c.planted; });
       if (on) {
         ctx.ui.setInfo(planted ? LINK_MSG
-          : '같은 햇볕을 받아도 맨옥상은 뜨겁고, 정원은 덜 뜨거워요. 맨옥상에 식물을 심으면 어떻게 될까요?');
+          : '같은 햇볕을 받아도 빈 옥상은 뜨겁고, 정원은 덜 뜨거워요. 빈 옥상에 식물을 심으면 어떻게 될까요?');
         if (!planted) s.btnPlant.classList.add('primary');
         if (planted) s.opQueued = 0.7; // 색이 바뀐 뒤 기록
       } else {
-        ctx.ui.setInfo('식물을 더 심거나 ‘열화상 보기’로 다시 비교해 보세요.');
+        ctx.ui.setInfo('식물을 더 심거나 ‘온도 색으로 보기’로 다시 비교해 보세요.');
       }
       this.sync(ctx);
     },
@@ -211,7 +211,7 @@
       s.tgl.set(false); this.setThermal(ctx, false);
       s.btnPlant.disabled = false; s.btnPlant.classList.add('primary'); s.tgl.el.classList.remove('primary');
       this.writeVeg(); s.dirty = true; this.sync(ctx);
-      ctx.ui.setInfo('회색 맨옥상 칸을 눌러 식물을 심어 보세요. 그다음 ‘열화상 보기’를 눌러요.');
+      ctx.ui.setInfo('회색 빈 칸을 눌러 식물을 심어 보세요. 그다음 ‘온도 색으로 보기’를 눌러요.');
     },
 
     // 점검용 상태(코어 패널 dataset)
@@ -318,6 +318,7 @@
       s.rays.visible = s.tagGarden.visible = s.tagBare.visible = s.tagSun.visible = act;
       s.cover.visible = s.th > 0; s.cover.material.opacity = s.th;
       s.dots.visible = s.tagHeat.visible = act && heatOn;
+      if (s.dots.visible) s.dots.material.color.set(s.thermal ? '#c2410c' : HEATC); // 온도 색 위(노란 빈 옥상)에서도 열 점이 묻히지 않게
       if (s.dots.visible) this.writeDots(dt);
       if (act) {
         s.rayT += dt;

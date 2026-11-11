@@ -16,24 +16,24 @@
   var WIN_ROWS = [[1.4, 1.8, 2.2], [1.6, 2.05], [1.82]];
   var WALL_SPD = [0.28, 0.18, 0.12], WIN_SPD = [0.4, 0.22, 0.13];  // m/s, 아트 디렉션 §5(열 0.25~0.4, 보강 뒤 0.12까지). 홑창이 벽보다 한 단계 빠르다(열이 잘 빠져나가는 곳)
   var WALL_LOSS = [0.6, 0.32, 0.2], WIN_LOSS = [0.4, 0.22, 0.14]; // 따뜻함이 주는 상대 빠르기(단열 안 한 집 = 1), 측정값 아님
-  var COOL = 0.15, CMP_T = 5, HN = 64, SN = 48;
+  var COOL = 0.15, CMP_T = 5, HN = 64, SN = 48, INS_TAG_Y = 2.45;
   var INK = '#2b2b2b', CONC = '#b9b9b4', INSC = '#f3dc9a', DOT = '#d9bb62', FIN = '#efe6d2',
     PANE = '#cfeaf7', AIR = '#f4fbff', FRAME = '#8a8178', SNOW = '#f4f8fb', SNOW2 = '#c9d3dc';
   var SASH = [[7.5], [7.38, 7.62], [7.26, 7.5, 7.74]];    // 진짜 창 구멍(x 7~8) 안의 창틀 위치
   var DOTS = [[0.2, 0.12], [0.7, 0.2], [0.4, 0.38], [0.8, 0.5], [0.25, 0.62], [0.6, 0.78], [0.15, 0.9], [0.75, 0.93],
     [0.45, 2.67], [0.8, 2.72], [0.2, 2.86], [0.6, 2.9]];
   var TXT = {
-    start: '창밖에는 눈이 내리고, 거실은 난방기로 따뜻해요. 벽 속은 어떻게 생겼을까요?',
-    open: '벽 속이 보여요. 작은 주황 점은 열이 실내에서 바깥으로 이동하는 모습을 나타내요.',
-    ins: ['단열재가 없으면 열이 벽을 빠르게, 많이 지나가요.',
-      '단열재가 열의 이동을 늦춰요. 벽을 지나는 열이 느려지고 줄었어요.',
-      '두꺼우면 열이 더 천천히 빠져나가요. 단열재가 열을 ‘막는다’는 건 이렇게 아주 느리게 한다는 뜻이에요.'],
-    win: ['홑창은 유리가 한 장이라 열이 쉽게 빠져나가요.',
-      '이중창은 유리 두 장 사이에 공기층이 있어서 열의 이동이 느려져요.',
-      '삼중창은 유리 석 장과 공기층 두 개가 열의 이동을 더 늦춰요.'],
-    cmpRun: '난방을 껐어요. 두 집의 따뜻함이 줄어드는 빠르기를 지켜봐요.',
-    cmpBetter: '우리 집이 더 천천히 식었어요. 집 모형 실험에서 단열한 집의 온도 변화가 더 작았던 것과 같아요.',
-    cmpSame: '두 집이 똑같이 빨리 식었어요. 단열재를 넣거나 창을 바꾸고 다시 비교해 보세요.'
+    start: '굵은 빨강은 난방기가 데운 따뜻한 공기예요. 벽 속은 어떻게 생겼을까요?',
+    open: '벽 속이 보여요. 작은 주황 점은 열이 바깥으로 이동하는 모습이에요.',
+    ins: ['단열재가 없으면 열이 벽을 빠르게 지나가요.',
+      '단열재가 열의 이동을 늦춰요. 지나가는 열이 줄었어요.',
+      '두꺼울수록 열이 더 느리게 빠져나가요.'],
+    win: ['유리가 한 장이면 열이 쉽게 빠져나가요.',
+      '이중창은 유리 두 장 사이의 공기가 열의 이동을 늦춰요.',
+      '삼중창은 유리가 세 장이라 열의 이동을 더 늦춰요.'],
+    cmpRun: '난방을 껐어요. 두 집이 식는 빠르기를 지켜봐요.',
+    cmpBetter: '우리 집이 더 천천히 식었어요. 집 모형 실험과 같아요.',
+    cmpSame: '두 집이 똑같이 빨리 식었어요. 단열재를 넣거나 창을 바꿔 보세요.'
   };
   var MTX = new T.Matrix4(), RAD_OFF = new T.Color('#b5aea2'), RAD_ON = new T.Color('#ff7a4d');
 
@@ -101,13 +101,13 @@
       for (i = 0; i < SN; i++) s.flakes.push({ x: 8.4 + Math.random() * 5.4, y: Math.random() * 4.6, z: -11 + Math.random() * 8, v: 0.45 + Math.random() * 0.35, p: Math.random() * 6.3 });
 
       // 따뜻한 공기: 난방기에서 창을 타고 올라가 방 안으로
-      s.air = V.flow([[6.78, 0.74, -3.45], [6.86, 1.5, -3.45], [6.86, 2.2, -3.55], [6.78, 2.75, -3.75]],
+      s.air = V.flow([[6.78, 0.74, -3.1], [6.86, 1.5, -2.75], [6.86, 2.2, -2.7], [6.78, 2.75, -2.9]], // 창틀 오른쪽 가장자리로: 비교할 창 유리를 가리지 않게
         { color: '#ff5a3c', count: 4, size: 0.16, speed: 0.6 });
       s.air.object3d.visible = false; root.add(s.air.object3d);
 
       // 층 이름표(3개): 실내 마감·단열재는 위 띠 왼쪽에 두 줄로 쌓고 지시선으로 층에 잇는다(위쪽은 코어 안내 알약 자리)
       function tag(t, h) { var sp = V.textSprite(t, { height: h, color: INK, bg: '#fffdf5', depthTest: false }); sp.visible = false; root.add(sp); return sp; }
-      s.tags = { fin: tag('실내 마감', 0.15), ins: tag('단열재', 0.15), out: tag('바깥 벽', 0.16) };
+      s.tags = { fin: tag('안쪽 벽', 0.3), ins: tag('단열재', 0.3), out: tag('바깥 벽', 0.3) }; // 지침 최소 0.3m
 
       // 3D 누르기: 벽 자리 = 열기/단열재 바꾸기, 창 = 유리 장수 바꾸기 (보이지 않는 판, 그리지 않음)
       var hide = new T.MeshBasicMaterial({ visible: false });
@@ -130,12 +130,12 @@
       var gi = group('벽 속 단열재'); s.insBox = gi.box;
       s.btnIns = ['없음', '넣기', '두껍게'].map(function (t, n) { return ui.button(t, function () { self.setIns(ctx, n); }, { parent: gi.row }); });
       var gw = group('창의 유리');
-      s.btnWin = ['홑창', '이중창', '삼중창'].map(function (t, n) { return ui.button(t, function () { self.setWin(ctx, n + 1); }, { parent: gw.row }); });
+      s.btnWin = ['한 장', '이중창', '삼중창'].map(function (t, n) { return ui.button(t, function () { self.setWin(ctx, n + 1); }, { parent: gw.row }); });
       s.btnIns.concat(s.btnWin).forEach(function (b) { b.style.cssText = 'padding:6px 2px;white-space:nowrap'; }); // 세 칸 버튼: ‘✓ 이중창’이 1000px 폭에서도 한 줄
       s.btnCmp = ui.button('난방 끄고 비교', function () { self.compare(ctx); });
       s.barBase = ui.bar('단열 안 한 집의 따뜻함', { max: 1, value: 1, color: '#8a96a3', format: word });
       s.barOurs = ui.bar('우리 집의 따뜻함', { max: 1, value: 1, color: '#ffa726', format: word });
-      ui.legend([{ color: '#ff5a3c', text: '굵은 빨강 — 따뜻한 공기' }, { color: '#ffa726', text: '작은 주황 — 열의 이동' }]);
+      ui.legend([{ color: '#ffa726', text: '작은 주황 — 열의 이동' }]); // 범례 1줄(굵은 빨강은 첫 안내 문장이 설명): 1000×600 에서 패널 안에 다 보이게
       ui.button('처음 상태로', function () { self.reset(ctx); }, { small: true });
 
       ctx.showModelLabel(true); // 공기·열의 흐름을 그린 모형 장면
@@ -189,7 +189,7 @@
       s.btnOpen.hidden = s.open; s.insBox.hidden = !s.open;
       function mark(btns, labels, sel) { btns.forEach(function (b, i) { b.classList.toggle('on', i === sel); b.textContent = (i === sel ? '✓ ' : '') + labels[i]; }); }
       mark(s.btnIns, ['없음', '넣기', '두껍게'], s.ins);
-      mark(s.btnWin, ['홑창', '이중창', '삼중창'], s.win - 1);
+      mark(s.btnWin, ['한 장', '이중창', '삼중창'], s.win - 1);
       var next = !s.open ? s.btnOpen : s.ins === 0 ? s.btnIns[1] : s.win === 1 ? s.btnWin[1] : !s.compared && !s.cmp ? s.btnCmp : null;
       [s.btnOpen, s.btnCmp].concat(s.btnIns, s.btnWin).forEach(function (b) { b.classList.toggle('primary', b === next); });
       s.dirty = true;
@@ -253,10 +253,11 @@
       // 이름표: 실내 마감(위)·단열재(아래)는 위 띠 왼쪽에 쌓고 지시선(끝에 점)으로 층에 잇는다. 두 이름표 사이(y 2.78)로 열 점 한 줄이 지나간다
       var tx = x - D - 0.04;
       function lead(x1, ly) { hline(tx, x1, ly); M.box(x1 - 0.025, ly - 0.025, ZC, x1 + 0.025, ly + 0.025, ZC + 0.01, INK); }
-      if (s.openK > 0.97) { lead(x - D + FIN_T / 2, 2.885); if (insD > 0.15) lead(x - OUT_T - insD / 2, 2.675); } // 이름표 보임 조건과 같게(update)
+      // 단열재 이름표는 높이 0.3 글자 판이 안쪽 벽 이름표와 겹치지 않게 한 칸 아래(INS_TAG_Y)에 두고 ㄴ자 지시선으로 층에 잇는다
+      if (s.openK > 0.97) { lead(x - D + FIN_T / 2, 2.885); if (insD > 0.15) { lead(x - OUT_T - insD / 2, 2.675); vline(tx + 0.01, INS_TAG_Y, 2.675); } } // 이름표 보임 조건과 같게(update)
       M.end();
       s.tags.fin.position.set(tx - s.tags.fin.scale.x / 2, 2.885, ZC + 0.01);
-      s.tags.ins.position.set(tx - s.tags.ins.scale.x / 2, 2.675, ZC + 0.01);
+      s.tags.ins.position.set(tx - s.tags.ins.scale.x / 2, INS_TAG_Y, ZC + 0.01);
       s.tags.out.position.set(x - OUT_T / 2, 3.05, ZC + 0.1); // 바깥 벽층 바로 위(안내 알약보다 아래)
     },
 

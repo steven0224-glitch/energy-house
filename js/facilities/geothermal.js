@@ -110,7 +110,9 @@
 
       // 2) 덮개(잔디 블록): 닫혀 있으면 단면 자리를 막고, 열면 들렸다가 서쪽으로 밀려난다
       var lid = new T.Group(); root.add(lid);
-      lid.add(B.mesh([{ min: [X0, -0.5, Z0], max: [X1, 0, Z1], mat: 'grass' }]));
+      // 윗면은 콘크리트 + 먹색 손잡이 홈: 잔디와 구분돼 ‘열 수 있는 덮개’로 읽히게
+      lid.add(B.mesh([{ min: [X0, -0.5, Z0], max: [X1, 0, Z1], mat: { top: 'concrete', side: 'grass', bottom: 'grass' } },
+        { min: [X1 - 0.6, 0, (Z0 + Z1) / 2 - 0.2], max: [X1 - 0.5, 0.03, (Z0 + Z1) / 2 + 0.2], mat: '#2b2b2b' }]));
       s.lid = lid;
 
       // 3) 단면이 열렸을 때만 보이는 것
@@ -150,10 +152,10 @@
       s.plateMat = new T.MeshBasicMaterial({ color: WARM, map: ptex });
       s.plate = new T.Mesh(new T.BoxGeometry(2.8, 2.0, 0.04), s.plateMat); s.plate.position.set(-1.9, 1.25, 0.02); inside.add(s.plate);
       s.cWarm = new T.Color(WARM); s.cCool = new T.Color(COOL); s.cFrom = new T.Color(WARM);
-      s.tagW = V.textSprite('겨울: 집이 따뜻해요', { height: 0.42, color: '#8a2a12', bg: '#fff1ea' }); s.tagW.position.set(-1.55, 0.85, 0.5);
-      s.tagS = V.textSprite('여름: 집이 시원해요', { height: 0.42, color: '#123f8a', bg: '#eef4ff' }); s.tagS.position.set(-1.55, 0.85, 0.5);
+      s.tagW = V.textSprite('겨울: 집이 따뜻해요', { height: 0.5, color: '#8a2a12', bg: '#fff1ea' }); s.tagW.position.set(-1.55, 0.85, 0.5);
+      s.tagS = V.textSprite('여름: 집이 시원해요', { height: 0.5, color: '#123f8a', bg: '#eef4ff' }); s.tagS.position.set(-1.55, 0.85, 0.5);
       var tagG = V.textSprite('땅속', { height: 0.5, color: '#4a2f1a' }); tagG.position.set(-6.35, -1.0, 3.5);
-      var tagP = V.textSprite('배관', { height: 0.5, color: '#7a3d12' }); tagP.position.set(-2.75, -1.0, 3.5);
+      var tagP = V.textSprite('파이프', { height: 0.5, color: '#7a3d12' }); tagP.position.set(-2.75, -1.0, 3.5);
       var tagD = V.textSprite('연결 장치', { height: 0.4, color: '#3a434c' }); tagD.position.set(-3.3, 1.35, 2.45);
       inside.add(s.tagW, s.tagS, tagG, tagP, tagD);
 
@@ -166,13 +168,13 @@
 
       // 패널
       s.info = '';
-      this.say(ctx, '마당 땅속에 지열 설비의 배관이 묻혀 있어요. ‘땅속 보기’를 눌러 보세요.');
+      this.say(ctx, '마당 땅속에 지열 설비의 파이프가 묻혀 있어요. ‘땅속 보기’를 눌러 보세요.');
       s.btnOpen = ui.button('땅속 보기', function () { self.setOpen(ctx, !s.open); }, { primary: true });
       var row = ui.row();
       s.btnW = ui.button('겨울', function () { self.setSeason(ctx, 'winter'); }, { parent: row });
       s.btnS = ui.button('여름', function () { self.setSeason(ctx, 'summer'); }, { parent: row });
-      ui.el('div', 'plegend', '태양광은 햇빛으로 전기를 만들어요. 지열 설비는 땅과 열을 주고받아 냉난방을 해요.');
-      ui.legend([{ color: HEAT, text: '주황 화살표·작은 알갱이 — 열이 가는 길' }, { color: '#6fc3ff', text: '파란 알갱이 — 배관 속을 도는 물' }]);
+      ui.el('div', 'plegend', '지열 설비는 땅과 열을 주고받아 냉난방을 해요.');
+      ui.legend([{ color: HEAT, text: '주황 화살표·작은 알갱이 — 열이 가는 길' }, { color: '#6fc3ff', text: '파란 알갱이 — 파이프 속을 도는 물' }]);
       ui.button('처음 상태로', function () { self.reset(ctx); }, { small: true });
       this.sync(ctx);
 
@@ -201,9 +203,9 @@
 
     seasonInfo: function (ctx) {
       var s = this.s, w = s.season === 'winter';
-      var t = w ? '겨울에는 땅속의 열을 배관 속 물이 받아 집으로 옮겨요. 이 열로 난방을 해요.'
-        : '여름에는 집 안의 열을 배관 속 물이 땅으로 보내요. 그래서 집이 시원해져요.';
-      if (!s.operated) t = w ? '겨울에는 땅속의 열이 배관을 타고 집으로 가요. ‘여름’도 눌러 보세요.' : t;
+      var t = w ? '겨울에는 땅속의 열을 파이프 속 물이 받아 집으로 옮겨요. 이 열로 난방을 해요.'
+        : '여름에는 집 안의 열을 파이프 속 물이 땅으로 보내요. 그래서 집이 시원해져요.';
+      if (!s.operated) t = w ? '겨울에는 땅속의 열이 파이프를 타고 집으로 가요. ‘여름’도 눌러 보세요.' : t;
       this.say(ctx, t);
     },
 
@@ -230,7 +232,7 @@
       var s = this.s;
       s.season = 'winter'; s.plateK = 1; s.markT = -1;
       this.setOpen(ctx, false);
-      this.say(ctx, '마당 땅속에 지열 설비의 배관이 묻혀 있어요. ‘땅속 보기’를 눌러 보세요.');
+      this.say(ctx, '마당 땅속에 지열 설비의 파이프가 묻혀 있어요. ‘땅속 보기’를 눌러 보세요.');
     },
 
     // 버튼 상태: 먼저 누를 것 하나만 노랑, 고른 것은 초록 ✓
