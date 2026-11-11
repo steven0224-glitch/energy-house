@@ -64,7 +64,8 @@ body.started:not(.fac-mode) #joy { display: block; }
 
 #modelLabel { position: fixed; left: 14px; bottom: 14px; z-index: 8; font-size: 14px; font-weight: 700; padding: 5px 10px; border-radius: 8px; background: rgba(43, 43, 43, .85); color: #fff; pointer-events: none; }
 #toast { position: fixed; left: 50%; bottom: 112px; transform: translateX(-50%); z-index: 20; background: var(--ink); color: #fffdf5; padding: 10px 18px; border-radius: 14px; font-size: 18px; font-weight: 700; max-width: 80vw; text-align: center; pointer-events: none; }
-body.fac-mode #toast { left: calc((100vw - var(--pw) - 24px) / 2); }
+/* 시설 모드: 장면 가운데(조작 대상) 대신 화면 위 가운데 — 바로 가기·내가 살펴본 곳 단추 사이(양옆 140px 비움) */
+body.fac-mode #toast { left: calc((100vw - var(--pw) - 24px) / 2); top: 12px; bottom: auto; max-width: calc(100vw - var(--pw) - 24px - 280px); }
 
 #modal { position: fixed; inset: 0; z-index: 30; background: rgba(43, 43, 43, .5); display: flex; align-items: center; justify-content: center; }
 .m-box { width: min(900px, 94vw); max-height: 92vh; display: flex; flex-direction: column; background: #fffdf5; border: 3px solid var(--ink); border-radius: 18px; box-shadow: 0 5px 0 var(--ink); }
@@ -78,8 +79,8 @@ body.fac-mode #toast { left: calc((100vw - var(--pw) - 24px) / 2); }
 .tile:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
 .tile.place { background: #ffe27a; } .tile.resource { background: #dff7e5; border-color: var(--res); } .tile.energy { background: #ffeedb; border-color: var(--en); }
 .tile-name { font-size: 18px; font-weight: 800; } .tile-sub { font-size: 15px; font-weight: 600; opacity: .8; }
-.grid.rec { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
-.grid.rec img, .tile-icon { width: 100%; aspect-ratio: 1.6; border-radius: 8px; object-fit: cover; }
+.grid.rec, .grid.todo-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } /* 10곳이 2줄 안에 — 스크롤 없이 한눈에 */
+.grid.rec img, .tile-icon { width: 100%; aspect-ratio: 2; border-radius: 8px; object-fit: cover; }
 .tile-icon { display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 800; background: rgba(0, 0, 0, .08); }
 
 #start { position: fixed; inset: 0; z-index: 40; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 20px; background: rgba(255, 248, 225, .10); } /* 카드를 아래로: 집이 먼저 보이게 */
@@ -104,7 +105,16 @@ body.fac-mode #toast { left: calc((100vw - var(--pw) - 24px) / 2); }
   .pbtn { min-height: 46px; font-size: 18px; } .pbtn.small { min-height: 44px; } .pbtn.p-reset { top: 6px; }
   .p-back { height: 52px; margin: 6px 14px 10px; } .pbar-track { height: 16px; } .pbar-head { font-size: 16px; margin-bottom: 2px; }
 }
+@media (max-height: 560px) { /* 주소줄이 켜진 1000×520 근사: 시설 패널 본문 자리를 넓힌다(단추 44px 이상 유지) */
+  .hud-btn { top: 8px; height: 48px; } #chips { top: 64px; } #panel { top: 64px; bottom: 8px; }
+  .p-head { display: flex; align-items: baseline; gap: 8px; padding: 5px 14px 3px; }
+  .p-name { font-size: 20px; } .p-bodies { padding: 6px 12px 10px; }
+  .p-info { font-size: 16px; line-height: 1.35; margin-bottom: 6px; } .p-ctrls { gap: 5px; }
+  .pbtn { min-height: 44px; font-size: 17px; padding: 4px 8px; } .pbar-track { height: 14px; } .plegend { font-size: 15px; }
+  .p-back { height: 46px; margin: 4px 12px 8px; font-size: 19px; }
+}
 .m-progress { margin: 0 0 10px; font-size: 18px; font-weight: 700; }
 .todo { min-height: 60px; border-radius: 12px; border: 3px dashed var(--ink); background: #f4f1ea; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px; gap: 2px; color: var(--ink); }
 .todo.resource { border-color: var(--res-ink, #167a35); } .todo.energy { border-color: var(--en-ink, #a65400); }
 .todo:active { transform: translateY(2px); }
+@media (max-height: 560px) { .grid.rec img, .grid.rec .tile-icon { aspect-ratio: 2.8; } .tile-icon { font-size: 30px; } }

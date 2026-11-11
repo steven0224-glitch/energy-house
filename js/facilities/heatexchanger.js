@@ -22,7 +22,7 @@
 
   // ---------- 좌표(세계 m). 설비실 x3~7, z-11~-7, 뒷벽 안쪽 면 z=-11 ----------
   var ZD = -10.8;                 // 덕트 가운데 깊이(덕트는 벽에 붙음: z -11 ~ -10.6)
-  var ZP = -10.5;                 // 코어 통로 안 공기 입자 깊이
+  var ZP = -10.72;                // 코어 통로 안 공기 입자 깊이: 열 화살표(z≈-10.38)보다 뒤, 통로 띠(-10.9) 쪽으로 물려 주황 열이 앞에 보이게
   var ZS = -10.93;                // 길 표시 띠 깊이(덕트 뒤판 바로 앞)
   var DR = 0.2, WT = 0.04;        // 덕트 반폭, 벽 두께
   var CX0 = 4.62, CX1 = 5.93;      // 코어 통로 왼쪽·오른쪽 끝
@@ -32,6 +32,7 @@
   var EYE_ROOM = [3.35, 2.35];    // 실내 공기가 출발하는 곳(흡입구 아래)
 
   var SPEED = 0.6, HEAT_SPEED = 0.3, AIR_SIZE = 0.16, HEAT_SIZE = 0.07, PER_M = 1.2;
+  var CORE_K = 0.5;               // 코어 통로 안에서 공기 입자 크기 비율: 칸막이 사이를 꽉 채운 연한 사각형으로 튀지 않게(덮인 머리 안에서 줄었다 커진다)
 
   function pathOut(y) {
     return [[EYE_ROOM[0], EYE_ROOM[1], ZD], [3.35, 3.6, ZD], [XL, 3.6, ZD], [XL, 1.9, ZD], [XL, y, ZP],
@@ -306,7 +307,7 @@
         for (var q = 1; q < v.length; q++) { L += v[q].distanceTo(v[q - 1]); cum.push(L); }
         var ia = stream === 'out' ? 5 : 4;                         // 코어 통로가 시작하는 점 번호
         var n = Math.max(2, Math.round(L * PER_M));
-        s.paths.push({ stream: stream, v: v, cum: cum, L: L, dA: cum[ia], dB: cum[ia + 1], n: n, phase: phase });
+        s.paths.push({ stream: stream, v: v, cum: cum, L: L, dA: cum[ia], dB: cum[ia + 1], dH0: cum[ia - 1], dH1: cum[ia + 2], n: n, phase: phase });
       }
       addPath('out', pathOut(PASS.out[0]), 0); addPath('out', pathOut(PASS.out[1]), 0.5);
       addPath('in', pathIn(PASS.in[0]), 0); addPath('in', pathIn(PASS.in[1]), 0.5);
@@ -557,6 +558,8 @@
             var a = P.v[seg - 1], b = P.v[seg], kk = (d - P.cum[seg - 1]) / Math.max(1e-6, P.cum[seg] - P.cum[seg - 1]);
             v.lerpVectors(a, b, kk);
             var sc = AIR_SIZE * ease(s.air) * foc * Math.min(1, d / 0.3, (P.L - d) / 0.3);
+            var ci = Math.min(clamp01((d - P.dH0) / (P.dA - P.dH0)), clamp01((P.dH1 - d) / (P.dH1 - P.dB)));   // 0 덕트 ~ 1 코어
+            sc *= 1 - (1 - CORE_K) * ci;
             mtx.makeScale(sc, sc, sc); mtx.setPosition(v); pm.setMatrixAt(n, mtx);
             pm.setColorAt(n, this.color(P.stream, clamp01((d - P.dA) / (P.dB - P.dA)), col));
             n++;

@@ -378,7 +378,7 @@
       if (!left.length) { el('p', 'm-progress', total + '곳을 모두 살펴봤어요!', b); return; }
       // 남은 곳: .tile 이 아닌 .todo 로 — '살펴본 곳' 타일 수를 세는 검사와 섞이지 않게
       el('div', 'm-sec', '아직 안 간 곳 ' + left.length, b);
-      var t = el('div', 'grid', null, b);
+      var t = el('div', 'grid todo-grid', null, b);
       left.forEach(function (id) {
         var m = L.facilities[id], c = el('button', 'todo ' + m.category, null, t); c.type = 'button';
         el('span', 'tile-name', m.name, c); el('span', 'tile-sub', m.place + ' · 눌러서 가기', c);

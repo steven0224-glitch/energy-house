@@ -120,23 +120,26 @@
       ctx.addCollider([6.45, 0, -4.1], [7, 0.75, -2.9]);     // 난방기
 
       // 패널
-      function group(title) {
-        var box = ui.el('div'); box.style.cssText = 'display:flex;flex-direction:column;gap:6px';
-        ui.el('div', 'plegend plegend-title', title, box);
+      // 1000×600 에서 ‘처음 상태로’까지 스크롤 없이 보이게: 제목 줄과 버튼 줄 사이를 좁히고, 범례는 단열재 제목 줄 오른쪽에 둔다
+      function group(title, legend) {
+        var box = ui.el('div'); box.style.cssText = 'display:flex;flex-direction:column;gap:3px';
+        var head = ui.el('div', 'plegend plegend-title', null, box); head.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0;line-height:1.2';
+        ui.el('span', null, title, head);
+        if (legend) ui.legend(legend, null, { parent: head }).style.fontWeight = 'normal';
         return { box: box, row: ui.row(box) };
       }
       ui.setInfo(TXT.start);
       s.btnOpen = ui.button('벽 단면 열기', function () { self.setOpen(ctx); }, { primary: true });
-      var gi = group('벽 속 단열재'); s.insBox = gi.box;
+      var gi = group('벽 속 단열재', [{ color: '#ffa726', text: '작은 주황 — 열' }]); s.insBox = gi.box; // 열 알갱이는 단면이 열렸을 때만 보이므로 범례도 이 묶음과 함께 보인다
       s.btnIns = ['없음', '넣기', '두껍게'].map(function (t, n) { return ui.button(t, function () { self.setIns(ctx, n); }, { parent: gi.row }); });
       var gw = group('창의 유리');
       s.btnWin = ['한 장', '이중창', '삼중창'].map(function (t, n) { return ui.button(t, function () { self.setWin(ctx, n + 1); }, { parent: gw.row }); });
       s.btnIns.concat(s.btnWin).forEach(function (b) { b.style.cssText = 'padding:6px 2px;white-space:nowrap'; }); // 세 칸 버튼: ‘✓ 이중창’이 1000px 폭에서도 한 줄
-      s.btnCmp = ui.button('난방 끄고 비교', function () { self.compare(ctx); });
       s.barBase = ui.bar('단열 안 한 집의 따뜻함', { max: 1, value: 1, color: '#8a96a3', format: word });
       s.barOurs = ui.bar('우리 집의 따뜻함', { max: 1, value: 1, color: '#ffa726', format: word });
-      ui.legend([{ color: '#ffa726', text: '작은 주황 — 열의 이동' }]); // 범례 1줄(굵은 빨강은 첫 안내 문장이 설명): 1000×600 에서 패널 안에 다 보이게
-      ui.button('처음 상태로', function () { self.reset(ctx); }, { small: true });
+      var rowEnd = ui.row(); // 비교·처음 상태로를 맨 아래 한 줄에(1000×600 에서 스크롤 없이 다 보이게)
+      s.btnCmp = ui.button('난방 끄고 비교', function () { self.compare(ctx); }, { parent: rowEnd });
+      ui.button('처음 상태로', function () { self.reset(ctx); }, { small: true, parent: rowEnd }).style.flex = 'none';
 
       ctx.showModelLabel(true); // 공기·열의 흐름을 그린 모형 장면
       this.refresh(ctx);
@@ -169,10 +172,10 @@
       var s = this.s; if (s.cmp) return;
       s.cmp = { t: 0 }; s.heating = false; s.barBase.set(1); s.barOurs.set(1);
       s.btnCmp.textContent = '지켜보는 중…';
-      // 작은 화면(패널이 넘침): 비교 버튼·막대를 안내 바로 아래로 올려 안내와 막대가 한 화면에 보이게 한다(한 번 올리면 그 자리 유지)
+      // 더 작은 화면(패널이 넘침): 막대를 안내 바로 아래로 올려 안내와 막대가 한 화면에 보이게 한다(한 번 올리면 그 자리 유지)
       var sc = s.barOurs.el.closest('.p-bodies');
       if (sc && !s.cmpTop && sc.scrollHeight > sc.clientHeight + 1) {
-        s.cmpTop = true; [s.btnCmp, s.barBase.el, s.barOurs.el].forEach(function (e) { s.insBox.parentNode.insertBefore(e, s.insBox); });
+        s.cmpTop = true; [s.barBase.el, s.barOurs.el].forEach(function (e) { s.insBox.parentNode.insertBefore(e, s.insBox); });
       }
       if (sc && s.cmpTop) sc.scrollTop = 0;
       this.say(TXT.cmpRun, 0.3); this.refresh(ctx);

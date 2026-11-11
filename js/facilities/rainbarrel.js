@@ -138,7 +138,13 @@
     },
 
     reset: function (ctx) {
-      var s = this.s; if (s.anim) return;
+      var s = this.s;
+      // 붓는 중이면 붓기를 멈춘다(예약된 다음 붓기도 취소). markOperated 는 다 부은 뒤에만 부르므로 기록은 그대로
+      if (s.anim) {
+        s.anim = null; s.next = null;
+        s.can.visible = false; s.can.rotation.z = 0; s.stream.object3d.visible = false;
+        s.btnTap.disabled = s.btnRain.disabled = false; this.mark(null);
+      }
       s.total = s.tap = 0; s.level = 1; s.aliveTarget = 0;
       s.barTotal.setMax(40); s.barTap.setMax(40); s.barTotal.set(0); s.barTap.set(0);
       ctx.ui.setInfo('꽃이 다시 목말라요. 무엇으로 물을 줄까요?');
