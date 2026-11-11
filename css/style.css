@@ -13,7 +13,8 @@ button { font-family: inherit; color: inherit; cursor: pointer; touch-action: ma
 body.started .hud-btn { display: block; }
 #btnGo { left: 12px; background: #ffe27a; }
 #btnRec { right: 12px; }
-#recCount { display: inline-block; min-width: 28px; margin-left: 6px; padding: 1px 6px; border-radius: 99px; background: var(--ink); color: #fff; font-size: 16px; }
+.recPill { display: inline-block; min-width: 28px; margin-left: 6px; padding: 1px 6px; border-radius: 99px; background: var(--ink); color: #fff; font-size: 16px; }
+.recTot { font-size: 13px; opacity: .8; margin-left: 1px; }
 
 #chips { position: fixed; top: 76px; left: 50%; transform: translateX(-50%); z-index: 9; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; max-width: 60vw; }
 body.fac-mode #chips { left: calc((100vw - var(--pw) - 24px) / 2); }
@@ -103,3 +104,7 @@ body.fac-mode #toast { left: calc((100vw - var(--pw) - 24px) / 2); }
   .pbtn { min-height: 46px; font-size: 18px; } .pbtn.small { min-height: 44px; } .pbtn.p-reset { top: 6px; }
   .p-back { height: 52px; margin: 6px 14px 10px; } .pbar-track { height: 16px; } .pbar-head { font-size: 16px; margin-bottom: 2px; }
 }
+.m-progress { margin: 0 0 10px; font-size: 18px; font-weight: 700; }
+.todo { min-height: 60px; border-radius: 12px; border: 3px dashed var(--ink); background: #f4f1ea; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px; gap: 2px; color: var(--ink); }
+.todo.resource { border-color: var(--res-ink, #167a35); } .todo.energy { border-color: var(--en-ink, #a65400); }
+.todo:active { transform: translateY(2px); }

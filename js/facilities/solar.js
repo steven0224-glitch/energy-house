@@ -195,7 +195,7 @@
         });
         return g;
       });
-      s.hints = s.clouds.map(function (g) { var h = V.textSprite('끌어 보세요', { height: 0.52 }); h.position.set(0, -0.95, 1.0); h.visible = false; g.add(h); return h; });
+      s.hints = s.clouds.map(function (g) { var h = V.textSprite('끌어 보세요', { height: 0.58 }); h.position.set(0, -0.95, 1.0); h.visible = false; g.add(h); return h; }); // 0.58: 1000×600 먼 구름(맥박 최소)에서도 글자 15px 이상
 
       // ---- 전선: 패널 → 옥상 → 지붕 끝 단면 → 집 안 전등 ----
       var P = [[2.31, 5.9, -1.09], [2.31, WY, -1.09], [2.31, WY, -1.6], [-0.85, WY, -1.6], [-0.85, WY, -1.24], [-0.85, 4.0, -1.24], [-0.85, 3.47, -1.24]];
@@ -255,8 +255,8 @@
         { min: [-0.97, 2.96, -1.36], max: [-0.73, 3.1, -1.12], color: '#ffffff' },
         { min: [-1.65, 0.035, -2.1], max: [0.0, 0.045, -0.4], color: '#fff3b0' }                  // 바닥에 비친 불빛
       ], true, 12));
-      var tagLamp = V.textSprite('전등', { height: 0.55 }); tagLamp.position.set(-0.85, 2.4, -0.9); cut.add(tagLamp);
-      var tagGrid = V.textSprite('발전소 전기', { height: 0.5 }); tagGrid.position.set(-2.3, 5.25, 1.6); cut.add(tagGrid); // 전봇대 위: 흐린 점이 어디서 오는지(글자 판 4개째)
+      var tagLamp = V.textSprite('전등', { height: 0.65 }); tagLamp.position.set(-0.85, 2.4, -0.9); cut.add(tagLamp);
+      var tagGrid = V.textSprite('발전소 전기', { height: 0.56 }); tagGrid.position.set(-2.3, 5.25, 1.6); cut.add(tagGrid); // 전봇대 위: 흐린 점이 어디서 오는지(글자 판 4개째)
 
       ctx.addCollider([1.95, 5, -2.45], [7.45, 7.1, -0.75]);
       ctx.showModelLabel(true);

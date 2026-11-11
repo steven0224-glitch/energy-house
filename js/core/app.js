@@ -320,7 +320,7 @@
       store.set('exp.thumbs', thumbs);
     } catch (e) { /* 썸네일 실패 → 목록에서 아이콘으로 대체 */ }
   }
-  function updateRecCount() { $('recCount').textContent = records.length; }
+  function updateRecCount() { $('recCount').textContent = records.length; $('recTotal').textContent = Object.keys(L.facilities).length; }
 
   /* ---------- 화면 UI ---------- */
   var toastTimer = 0;
@@ -368,9 +368,22 @@
   }
   function openRecords() {
     openModal('내가 살펴본 곳', function (b) {
-      if (!records.length) { el('p', 'm-empty', '아직 없어요. 시설에서 직접 조작하면 여기에 담겨요.', b); return; }
-      var g = el('div', 'grid rec', null, b);
-      records.forEach(function (id) { var m = L.facilities[id]; tile(g, m.name, m.place, m.category, function () { enterFacility(id); }, thumbs[id] || null); });
+      var total = L.order.length, left = L.order.filter(function (id) { return records.indexOf(id) < 0; });
+      el('div', 'm-sec', '살펴본 곳 ' + records.length + ' / ' + total, b);
+      if (!records.length) el('p', 'm-empty', '아직 없어요. 시설에서 직접 조작하면 여기에 담겨요.', b);
+      else {
+        var g = el('div', 'grid rec', null, b);
+        records.forEach(function (id) { var m = L.facilities[id]; tile(g, m.name, m.place, m.category, function () { enterFacility(id); }, thumbs[id] || null); });
+      }
+      if (!left.length) { el('p', 'm-progress', total + '곳을 모두 살펴봤어요!', b); return; }
+      // 남은 곳: .tile 이 아닌 .todo 로 — '살펴본 곳' 타일 수를 세는 검사와 섞이지 않게
+      el('div', 'm-sec', '아직 안 간 곳 ' + left.length, b);
+      var t = el('div', 'grid', null, b);
+      left.forEach(function (id) {
+        var m = L.facilities[id], c = el('button', 'todo ' + m.category, null, t); c.type = 'button';
+        el('span', 'tile-name', m.name, c); el('span', 'tile-sub', m.place + ' · 눌러서 가기', c);
+        c.addEventListener('click', function () { enterFacility(id); });
+      });
     });
   }
 

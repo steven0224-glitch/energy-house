@@ -55,7 +55,8 @@
       water.position.y = 0.1; barrel.add(water);
       var hinge = new T.Group(); hinge.position.set(0, 1.2, -0.52); barrel.add(hinge);
       hinge.add(B.mesh([{ min: [-0.55, 0, 0], max: [0.55, 0.1, 1.08], mat: 'darkwood' }]));
-      var tagRain = V.textSprite('빗물', { height: 0.42, color: '#1a5fa8' }); tagRain.position.set(0, 0.6, 0.62); barrel.add(tagRain);
+      // 통이 수도꼭지보다 멀어 같은 높이면 화면에서 작다 → 0.5. 물뿌리개 ‘10L’(통 앞 y≈0.65)과 겹치지 않게 통 위쪽에 붙인다
+      var tagRain = V.textSprite('빗물', { height: 0.5, color: '#1a5fa8' }); tagRain.position.set(0, 0.8, 0.62); barrel.add(tagRain);
       var faucet = hit([10.7, 0, 3.0], [11.3, 1.25, 3.4]); root.add(faucet);
       var tagTap = V.textSprite('수돗물', { height: 0.42, color: '#444' }); tagTap.position.set(11.1, 1.55, 3.2); root.add(tagTap);
 
@@ -117,11 +118,23 @@
 
     water: function (ctx, src) {
       var s = this.s;
-      if (s.anim) { if (s.anim.t > LOCK) s.next = src; return; } // 붓는 중 다시 누르면 끝난 뒤 이어서 준다
+      // 붓는 중 다른 쪽을 누르면 끝난 뒤 이어서 준다(그 버튼이 ‘다음 차례’로 바뀌어 받았음을 보인다). 붓고 있는 쪽은 다시 눌러도 그대로
+      if (s.anim) { if (s.anim.t > LOCK && src !== s.anim.src) { s.next = src; this.mark(s.anim.src, src); } return; }
       s.lidTarget = 1.75;
       s.anim = { src: src, t: 0, barsDone: false };
       (src === 'rain' ? s.btnTap : s.btnRain).disabled = true; // 방금 누른 버튼은 잠그지 않는다(art-direction §4)
+      this.mark(src);
       ctx.ui.setInfo(src === 'rain' ? '빗물통의 빗물을 받아요.' : '수도꼭지에서 수돗물을 받아요.');
+    },
+
+    // 버튼 상태(art-direction §4 ‘켜진 것’ = .on): 붓는 쪽 ‘물 주는 중…’, 이어서 줄 쪽 ‘다음 차례’, 다 부으면 원래 이름.
+    // ‘✓ 수돗물로 주기’는 1000×600 에서 두 줄로 꺾여 패널이 들썩여서 짧은 글자로 바꾼다
+    mark: function (pour, next) {
+      var s = this.s;
+      [[s.btnTap, 'tap', '수돗물로 주기'], [s.btnRain, 'rain', '빗물로 주기']].forEach(function (x) {
+        var t = x[1] === pour ? '물 주는 중…' : x[1] === next ? '다음 차례' : x[2];
+        x[0].textContent = t; x[0].classList.toggle('on', t !== x[2]);
+      });
     },
 
     reset: function (ctx) {
@@ -199,7 +212,7 @@
         }
         if (t > 4.1) can.scale.setScalar(Math.max(0.01, 1 - (t - 4.1) / 0.3));
       } else {
-        can.visible = false; s.anim = null; s.btnTap.disabled = s.btnRain.disabled = false;
+        can.visible = false; s.anim = null; s.btnTap.disabled = s.btnRain.disabled = false; this.mark(null);
         ctx.markOperated({ delay: 200 }); // 핵심 조작 완료 → 기록 + 꽃이 살아난 장면을 썸네일로
         if (s.next) { var nx = s.next; s.next = null; this.water(ctx, nx); }
       }

@@ -15,6 +15,8 @@
   var HEAT_YS = [-2.1, -3.9, -4.7], PER_ROW = 4, HEAT_SPD = 0.3;
   // 한 줄 = [땅 쪽 x, 배관 쪽 x]. 겨울에는 땅→배관, 여름에는 배관→땅으로 흐른다.
   var HEAT_SEGS = [[-6.85, -5.8], [-4.5, -5.4], [-4.5, -3.6], [-2.15, -3.2]];
+  // 첫 안내: ‘땅과 열을 주고받아 냉난방’(요청원문의 지열 표현)을 여기 둔다 — 고정 힌트 줄을 지워 패널 글 양을 줄였다
+  var INTRO = '지열 설비는 땅과 열을 주고받아 냉난방을 해요. ‘땅속 보기’를 눌러 보세요.';
 
   // 상자 여러 개를 정점 색 하나의 메시로 묶는다(재질 1개 = 드로콜 1). 16px 노이즈 텍스처를 곱해 블록 느낌을 낸다.
   var noiseTex = null;
@@ -152,11 +154,11 @@
       s.plateMat = new T.MeshBasicMaterial({ color: WARM, map: ptex });
       s.plate = new T.Mesh(new T.BoxGeometry(2.8, 2.0, 0.04), s.plateMat); s.plate.position.set(-1.9, 1.25, 0.02); inside.add(s.plate);
       s.cWarm = new T.Color(WARM); s.cCool = new T.Color(COOL); s.cFrom = new T.Color(WARM);
-      s.tagW = V.textSprite('겨울: 집이 따뜻해요', { height: 0.5, color: '#8a2a12', bg: '#fff1ea' }); s.tagW.position.set(-1.55, 0.85, 0.5);
-      s.tagS = V.textSprite('여름: 집이 시원해요', { height: 0.5, color: '#123f8a', bg: '#eef4ff' }); s.tagS.position.set(-1.55, 0.85, 0.5);
+      s.tagW = V.textSprite('겨울: 집이 따뜻해요', { height: 0.5, color: '#8a2a12', bg: '#fff1ea' }); s.tagW.position.set(-0.85, 0.85, 0.5);
+      s.tagS = V.textSprite('여름: 집이 시원해요', { height: 0.5, color: '#123f8a', bg: '#eef4ff' }); s.tagS.position.set(-0.85, 0.85, 0.5); // 왼쪽 끝이 연결 장치 뒤로 가려지지 않게 오른쪽으로
       var tagG = V.textSprite('땅속', { height: 0.5, color: '#4a2f1a' }); tagG.position.set(-6.35, -1.0, 3.5);
       var tagP = V.textSprite('파이프', { height: 0.5, color: '#7a3d12' }); tagP.position.set(-2.75, -1.0, 3.5);
-      var tagD = V.textSprite('연결 장치', { height: 0.4, color: '#3a434c' }); tagD.position.set(-3.3, 1.35, 2.45);
+      var tagD = V.textSprite('연결 장치', { height: 0.45, color: '#3a434c' }); tagD.position.set(-4.45, 1.3, 2.3); // 장치 왼쪽 위: 집 판 이름표(여름/겨울)와 겹치지 않게
       inside.add(s.tagW, s.tagS, tagG, tagP, tagD);
 
       // 4) 배관 속을 도는 물(늘 보임: 덮개를 닫아도 땅 위 배관에서 돌고 있다)
@@ -168,13 +170,12 @@
 
       // 패널
       s.info = '';
-      this.say(ctx, '마당 땅속에 지열 설비의 파이프가 묻혀 있어요. ‘땅속 보기’를 눌러 보세요.');
+      this.say(ctx, INTRO);
       s.btnOpen = ui.button('땅속 보기', function () { self.setOpen(ctx, !s.open); }, { primary: true });
       var row = ui.row();
       s.btnW = ui.button('겨울', function () { self.setSeason(ctx, 'winter'); }, { parent: row });
       s.btnS = ui.button('여름', function () { self.setSeason(ctx, 'summer'); }, { parent: row });
-      ui.el('div', 'plegend', '지열 설비는 땅과 열을 주고받아 냉난방을 해요.');
-      ui.legend([{ color: HEAT, text: '주황 화살표·작은 알갱이 — 열이 가는 길' }, { color: '#6fc3ff', text: '파란 알갱이 — 파이프 속을 도는 물' }]);
+      ui.legend([{ color: HEAT, text: '열이 가는 길' }, { color: '#6fc3ff', text: '파이프 속을 도는 물' }]);
       ui.button('처음 상태로', function () { self.reset(ctx); }, { small: true });
       this.sync(ctx);
 
@@ -187,16 +188,7 @@
     },
 
     enter: function (ctx) {
-      ctx.showModelLabel(this.s.open);
-      // shortcut: 코어 첫 안내 칩(빗물통으로…)이 집 판·장치→집 화살표를 가리므로 시설 모드 동안 숨김(solar·lighting 과 같은 방식). 코어가 맡게 되면 지운다
-      var hint = document.getElementById('chipHint');
-      this.s.hintWas = !!hint && !hint.hidden; if (hint) hint.hidden = true;
-    },
-
-    exit: function () {
-      var hint = document.getElementById('chipHint');
-      if (hint && this.s.hintWas) hint.hidden = false;
-      this.s.hintWas = false;
+      ctx.showModelLabel(this.s.open); // 탐험 안내 칩은 코어가 시설 모드 동안 숨긴다(app.js enter·toExplore)
     },
 
     say: function (ctx, t) { this.s.info = t; ctx.ui.setInfo(t); },
@@ -204,7 +196,7 @@
     seasonInfo: function (ctx) {
       var s = this.s, w = s.season === 'winter';
       var t = w ? '겨울에는 땅속의 열을 파이프 속 물이 받아 집으로 옮겨요. 이 열로 난방을 해요.'
-        : '여름에는 집 안의 열을 파이프 속 물이 땅으로 보내요. 그래서 집이 시원해져요.';
+        : '여름에는 집 안의 열을 파이프 속 물이 땅으로 보내요. 땅과 열을 주고받아 냉난방을 해요.';
       if (!s.operated) t = w ? '겨울에는 땅속의 열이 파이프를 타고 집으로 가요. ‘여름’도 눌러 보세요.' : t;
       this.say(ctx, t);
     },
@@ -232,7 +224,7 @@
       var s = this.s;
       s.season = 'winter'; s.plateK = 1; s.markT = -1;
       this.setOpen(ctx, false);
-      this.say(ctx, '마당 땅속에 지열 설비의 파이프가 묻혀 있어요. ‘땅속 보기’를 눌러 보세요.');
+      this.say(ctx, INTRO);
     },
 
     // 버튼 상태: 먼저 누를 것 하나만 노랑, 고른 것은 초록 ✓

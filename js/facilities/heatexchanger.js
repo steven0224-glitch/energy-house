@@ -325,7 +325,7 @@
       }
       s.tags = [
         tag('실내 공기 나감', '#b8321c', 3.62, 1.95, -10.1, 'out'),
-        tag('밖으로', '#2b2b2b', 6.72, 3.78, -10.45, 'out'),
+        tag('밖으로', '#2b2b2b', 6.48, 3.78, -10.45, 'out'),   // x 6.72 이면 오른쪽 끝이 동쪽 벽에 묻혀 잘린다
         tag('바깥 공기 들어옴', '#1a5fa8', 5.45, 3.36, -10.4, 'in'),   // 창틀을 가리지 않게 덕트 입구 높이로
         tag('실내로', '#2b2b2b', 3.85, 0.62, -9.75, 'in')
       ];
@@ -475,6 +475,8 @@
     // h(0~1, 코어를 지난 정도)와 지금 상태로 흐름 색을 c 에 담는다
     color: function (stream, h, c) {
       var s = this.s, k = h < 0 ? 0 : h * s.mix, o = stream === 'out';
+      // 색은 코어 가운데 40%(h 0.3~0.7)에서만 바뀐다: 빨강↔파랑 사이 옅은 회색을 오래 띠면 통로 위 빈 사각형처럼 보인다
+      k = ease(clamp01((k - 0.3) / 0.4));
       var c0 = o ? COL.warm : COL.cold, cm = o ? COL.outMid : COL.inMid, c1 = o ? COL.warmOut : COL.coldIn;
       if (k < 0.5) c.copy(c0).lerp(cm, k * 2); else c.copy(cm).lerp(c1, k * 2 - 1);
       if (h < 0 && s.by > 0) c.lerp(COL.off, 0.75 * s.by);        // 코어 띠: 장치가 없으면 회색
